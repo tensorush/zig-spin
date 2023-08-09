@@ -41,7 +41,7 @@ pub fn build(b: *std.Build) Error!void {
     inline for (EXAMPLE_NAMES) |EXAMPLE_NAME| {
         const example = b.addExecutable(.{
             .name = EXAMPLE_NAME,
-            .root_source_file = std.Build.FileSource.relative(EXAMPLES_DIR ++ EXAMPLE_NAME ++ "-zig/main.zig"),
+            .root_source_file = std.Build.FileSource.relative(EXAMPLES_DIR ++ EXAMPLE_NAME ++ "/main.zig"),
             .target = .{ .cpu_arch = .wasm32, .os_tag = .wasi },
             .optimize = .ReleaseSmall,
         });
