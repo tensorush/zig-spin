@@ -1,0 +1,9 @@
+id = "http-zig"
+manifest_version = "1"
+tags = ["http", "zig"]
+description = "HTTP request handler using Zig"
+
+[parameters]
+project-description = { type = "string", prompt = "Description", default = "" }
+http-base = { type = "string", prompt = "HTTP base", default = "/", pattern = "^/\\S*$" }
+http-path = { type = "string", prompt = "HTTP path", default = "/...", pattern = "^/\\S*$" }
