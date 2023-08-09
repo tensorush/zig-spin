@@ -6,7 +6,7 @@
 [![Codecov][codecov-shield]][codecov-url]
 [![License][license-shield]][license-url]
 
-### Zig SDK for the [Spin tool](https://github.com/fermyon/spin) created by the [Fermyon team](https://www.fermyon.com/).
+### Zig SDK for [Spin](https://github.com/fermyon/spin), a serverless application framework, created by the [Fermyon team](https://www.fermyon.com/).
 
 #### :rocket: Usage
 
