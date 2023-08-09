@@ -1,4 +1,4 @@
-## :lizard: :spin: **zig spin**
+## :lizard: :flying_disc: **zig spin**
 
 [![CI][ci-shield]][ci-url]
 [![CD][cd-shield]][cd-url]
