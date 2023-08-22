@@ -1,14 +1,12 @@
-## :lizard: :flying_disc: **zig spin**
+## :lizard: :yo_yo: **zig spin**
 
 [![CI][ci-shield]][ci-url]
-[![CD][cd-shield]][cd-url]
-[![Docs][docs-shield]][docs-url]
 [![Codecov][codecov-shield]][codecov-url]
 [![License][license-shield]][license-url]
 
 ### Zig SDK for [Spin](https://github.com/fermyon/spin), a serverless application framework, created by the [Fermyon team](https://www.fermyon.com/).
 
-#### :rocket: Usage
+### :rocket: Usage
 
 1. Add `spin` as a dependency in your `build.zig.zon`.
 
@@ -46,14 +44,32 @@
 
     </details>
 
+### :battery: Progress
+
+> Legend: :green_circle: - tested, :yellow_circle: - untested, :red_circle: - unimplemented.
+
+| Component  |     Status      |           Example            |
+|------------|:---------------:|:----------------------------:|
+| KVS        |  :red_circle:   |    [Click](examples/kvs)     |
+| HTTP       | :yellow_circle: |    [Click](examples/http)    |
+| Redis      |  :red_circle:   |   [Click](examples/redis)    |
+| Config     | :yellow_circle: |   [Click](examples/config)   |
+| SQLite     |  :red_circle:   |   [Click](examples/sqlite)   |
+| MySQL      |  :red_circle:   |   [Click](examples/mysql)    |
+| PostgreSQL |  :red_circle:   | [Click](examples/postgresql) |
+
+### :arrow_down: Dependencies
+
+- [`wit-bindgen-cli v0.2.0` - guest language WIT bindings generator](https://github.com/bytecodealliance/wit-bindgen/releases/tag/v0.2.0).
+
+    ```sh
+    cargo install --git https://github.com/bytecodealliance/wit-bindgen --rev cb871cf wit-bindgen-cli
+    ```
+
 <!-- MARKDOWN LINKS -->
 
 [ci-shield]: https://img.shields.io/github/actions/workflow/status/tensorush/zig-spin/ci.yaml?branch=main&style=for-the-badge&logo=github&label=CI&labelColor=black
 [ci-url]: https://github.com/tensorush/zig-spin/blob/main/.github/workflows/ci.yaml
-[cd-shield]: https://img.shields.io/github/actions/workflow/status/tensorush/zig-spin/cd.yaml?branch=main&style=for-the-badge&logo=github&label=CD&labelColor=black
-[cd-url]: https://github.com/tensorush/zig-spin/blob/main/.github/workflows/cd.yaml
-[docs-shield]: https://img.shields.io/badge/click-F6A516?style=for-the-badge&logo=zig&logoColor=F6A516&label=docs&labelColor=black
-[docs-url]: https://tensorush.github.io/zig-spin
 [codecov-shield]: https://img.shields.io/codecov/c/github/tensorush/zig-spin?style=for-the-badge&labelColor=black
 [codecov-url]: https://app.codecov.io/gh/tensorush/zig-spin
 [license-shield]: https://img.shields.io/github/license/tensorush/zig-spin.svg?style=for-the-badge&labelColor=black

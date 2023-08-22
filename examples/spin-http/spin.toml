@@ -1,0 +1,20 @@
+version = "1.0.0"
+name = "spin-http-zig"
+spin_manifest_version = "1"
+trigger = { type = "http", base = "/" }
+authors = ["Jora Troosh <tensorush@gmail.com>"]
+description = "Example application that greets the client."
+
+[variables]
+object = { default = "codebase" }
+
+[[component]]
+id = "spin_config_zig"
+source = "../../zig-out/bin/spin-http.wasm"
+
+[component.build]
+command = "zig build example"
+workdir = "../../"
+
+[component.trigger]
+route = "/..."

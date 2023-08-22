@@ -1,39 +1,21 @@
 const std = @import("std");
 
-const Error = std.os.WriteError || std.fs.File.OpenError;
-
-pub fn build(b: *std.Build) Error!void {
-    const root_source_file = std.Build.FileSource.relative("src/spin.zig");
+pub fn build(b: *std.Build) void {
+    const root_source_file = std.Build.FileSource.relative(SRC_DIR ++ "spin.zig");
 
     // Module
-    const spin_mod = b.addModule("spin", .{ .source_file = .{ .path = SRC_DIR ++ "spin.zig" } });
+    const spin_mod = b.addModule("spin", .{ .source_file = root_source_file });
 
-    // Library
-    const lib_step = b.step("lib", "Install library");
+    // WIT bindings
+    const wit_step = b.step("wit", "Generate WIT bindings for C guest modules");
 
-    const lib = b.addStaticLibrary(.{
-        .name = "spin",
-        .root_source_file = root_source_file,
-        .target = b.standardTargetOptions(.{}),
-        .optimize = .ReleaseSafe,
-        .version = .{ .major = 0, .minor = 1, .patch = 0 },
-    });
+    inline for (WIT_FILES, 0..) |WIT_FILE, i| {
+        const wit_run = b.addSystemCommand(&.{ "wit-bindgen", "c", if (WIT_IS_IMPORTS[i]) "-i" else "-e", WIT_FILE, "--out-dir", SRC_DIR });
 
-    const lib_install = b.addInstallArtifact(lib, .{});
-    lib_step.dependOn(&lib_install.step);
-    b.default_step.dependOn(lib_step);
+        wit_step.dependOn(&wit_run.step);
+    }
 
-    // Docs
-    const docs_step = b.step("docs", "Emit docs");
-
-    const docs_install = b.addInstallDirectory(.{
-        .source_dir = lib.getEmittedDocs(),
-        .install_dir = .prefix,
-        .install_subdir = "docs",
-    });
-
-    docs_step.dependOn(&docs_install.step);
-    b.default_step.dependOn(docs_step);
+    b.default_step.dependOn(wit_step);
 
     // Examples
     const examples_step = b.step("example", "Install examples");
@@ -45,7 +27,10 @@ pub fn build(b: *std.Build) Error!void {
             .target = .{ .cpu_arch = .wasm32, .os_tag = .wasi },
             .optimize = .ReleaseSmall,
         });
+        example.addCSourceFile(.{ .file = .{ .path = SRC_DIR ++ EXAMPLE_NAME ++ ".c" }, .flags = EXAMPLES_FLAGS });
+        example.addIncludePath(.{ .path = SRC_DIR });
         example.addModule("spin", spin_mod);
+        example.linkLibC();
 
         const example_install = b.addInstallArtifact(example, .{});
 
@@ -88,8 +73,28 @@ pub fn build(b: *std.Build) Error!void {
 
 const SRC_DIR = "src/";
 
+const WIT_DIR = "wit/";
+
+const WIT_FILES = &.{
+    WIT_DIR ++ "spin-config.wit",
+    WIT_DIR ++ "spin-http.wit",
+    WIT_DIR ++ "wasi-outbound-http.wit",
+};
+
+const WIT_IS_IMPORTS = &[WIT_FILES.len]bool{
+    true,
+    false,
+    true,
+};
+
 const EXAMPLES_DIR = "examples/";
 
 const EXAMPLE_NAMES = &.{
-    "config",
+    "spin-config",
+    "spin-http",
+};
+
+const EXAMPLES_FLAGS = &.{
+    "-Wno-unused-parameter",
+    "-Wno-switch-bool",
 };

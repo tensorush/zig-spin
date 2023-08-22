@@ -1,5 +1,9 @@
 const std = @import("std");
 
+const C = @cImport({
+    @cInclude("spin-config.h");
+});
+
 pub const Error = union(enum) {
     invalid_schema: []u8,
     invalid_key: []u8,
@@ -12,35 +16,14 @@ pub const Result = union(enum) {
     ok: []u8,
 };
 
-extern "spin-config" fn __wasm_import_get_config(usize, usize, usize) void;
+pub fn get(key_ptr: [*c]u8, key_len: usize) C.spin_config_expected_string_error_t {
+    var res: C.spin_config_expected_string_error_t = undefined;
 
-pub fn get(key: []const u8) Result {
-    var res_arr = [1]usize{0} ** 4;
+    var spin_key = C.spin_config_string_t{ .ptr = key_ptr, .len = key_len };
+    defer C.spin_config_expected_string_error_free(&res);
+    defer C.spin_config_string_free(&spin_key);
 
-    __wasm_import_get_config(@intFromPtr(key.ptr), key.len, @intFromPtr(&res_arr));
-
-    var res: Result = undefined;
-    var str: []u8 = undefined;
-
-    switch (res_arr[0]) {
-        0 => {
-            str.ptr = @ptrFromInt(res_arr[1]);
-            str.len = res_arr[2];
-            res = .{ .ok = str };
-        },
-        1 => {
-            str.ptr = @ptrFromInt(res_arr[2]);
-            str.len = res_arr[3];
-            switch (res_arr[1]) {
-                0 => res = .{ .err = .{ .provider = str } },
-                1 => res = .{ .err = .{ .invalid_key = str } },
-                2 => res = .{ .err = .{ .invalid_schema = str } },
-                3 => res = .{ .err = .{ .other = str } },
-                else => unreachable,
-            }
-        },
-        else => unreachable,
-    }
+    C.spin_config_get_config(&spin_key, &res);
 
     return res;
 }
