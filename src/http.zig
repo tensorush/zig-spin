@@ -1,33 +1,52 @@
 const std = @import("std");
+const spin = @import("spin.zig");
 
 const C = @cImport({
     @cInclude("spin-http.h");
     @cInclude("wasi-outbound-http.h");
 });
 
-const URI_LEN: u16 = 1 << 8;
-const BODY_LEN: u16 = 1 << 13;
-
-const allocator = std.heap.page_allocator;
-
-/// The application base path.
-pub const HEADER_BASE_PATH = "spin-base-path";
-/// The component route pattern matched, _excluding_ any wildcard indicator.
-pub const HEADER_COMPONENT_ROOT = "spin-component-route";
 /// The full URL of the request. This includes full host and scheme information.
 pub const HEADER_FULL_URL = "spin-full-url";
+/// The application base path.
+pub const HEADER_BASE_PATH = "spin-base-path";
+/// The request path relative to the component route (including any base).
+pub const HEADER_PATH_INFO = "spin-path-info";
+/// The client address for the request.
+pub const HEADER_CLIENT_ADDR = "spin-client-addr";
 /// The part of the request path that was matched by the route
 /// (including the base and wildcard indicator if present).
 pub const HEADER_MATCHED_ROUTE = "spin-matched-route";
-/// The request path relative to the component route (including any base).
-pub const HEADER_PATH_INFO = "spin-path-info";
+/// The component route pattern matched, _excluding_ any wildcard indicator.
+pub const HEADER_COMPONENT_ROOT = "spin-component-route";
 /// The component route pattern matched, as written in the component manifest
 /// (that is, _excluding_ the base, but including the wildcard indicator if present).
 pub const HEADER_RAW_COMPONENT_ROOT = "spin-raw-component-route";
-/// The client address for the request.
-pub const HEADER_CLIENT_ADDR = "spin-client-addr";
 
-const Method = enum {
+const ERROR_TAGS = std.meta.tags(Error);
+
+pub const Error = error{
+    Unused,
+    UnallowedDestination,
+    InvalidUrl,
+    BadRequest,
+    BadRuntime,
+};
+
+pub const Request = struct {
+    body: std.ArrayListUnmanaged(u8) = undefined,
+    headers: std.http.Headers = undefined,
+    url: []const u8 = undefined,
+    method: Method,
+};
+
+pub const Response = struct {
+    body: std.ArrayListUnmanaged(u8) = undefined,
+    headers: std.http.Headers = undefined,
+    status: std.http.Status = .ok,
+};
+
+pub const Method = enum {
     GET,
     POST,
     PUT,
@@ -37,98 +56,129 @@ const Method = enum {
     OPTIONS,
 };
 
-pub export fn spin_http_handle_http_request(req: *C.spin_http_request_t, res: *C.spin_http_response_t) void {
-    var body: []u8 = undefined;
+pub export fn spin_http_handle_http_request(c_req: *C.spin_http_request_t, c_res: *C.spin_http_response_t) void {
+    var req = Request{ .method = std.meta.intToEnum(Method, c_req.method) catch unreachable };
 
-    if (req.body.is_some) {
-        body.ptr = req.body.val.ptr;
-        body.len = req.body.val.len;
+    if (c_req.body.is_some) {
+        req.body.items.ptr = c_req.body.val.ptr;
+        req.body.items.len = c_req.body.val.len;
     }
 
-    const method = std.meta.intToEnum(Method, req.method) catch unreachable;
-    _ = method;
+    req.headers = std.http.Headers.init(std.heap.wasm_allocator);
 
-    var client = std.http.Client{ .allocator = allocator };
-    defer client.deinit();
+    var c_req_headers: []C.spin_http_tuple2_string_string_t = undefined;
+    c_req_headers.ptr = c_req.headers.ptr;
+    c_req_headers.len = c_req.headers.len;
 
-    var headers = std.http.Headers.init(allocator);
-    defer headers.deinit();
-
-    var spin_headers: []C.spin_http_tuple2_string_string_t = undefined;
-
-    spin_headers.ptr = req.headers.ptr;
-    spin_headers.len = req.headers.len;
-
-    for (spin_headers) |spin_header| {
-        var name: []u8 = undefined;
-        name.ptr = spin_header.f0.ptr;
-        name.len = spin_header.f0.len;
-        var value: []u8 = undefined;
-        value.ptr = spin_header.f1.ptr;
-        value.len = spin_header.f1.len;
-        headers.append(name, value);
+    var value: []u8 = undefined;
+    var name: []u8 = undefined;
+    for (c_req_headers) |c_req_header| {
+        name.ptr = c_req_header.f0.ptr;
+        name.len = c_req_header.f0.len;
+        value.ptr = c_req_header.f1.ptr;
+        value.len = c_req_header.f1.len;
+        req.headers.append(name, value) catch unreachable;
+        if (std.mem.eql(u8, HEADER_FULL_URL, name)) {
+            req.url = value;
+        }
     }
 
-    const uri = try std.Uri.parse(headers.getFirstValue(HEADER_FULL_URL).?);
+    const res = spin.HANDLER(req);
 
-    var r = try client.request(.GET, uri, headers, .{});
-    defer r.deinit();
+    c_res.status = @as(u16, @intFromEnum(res.status));
 
-    try r.start();
-    try r.wait();
+    const headers_len = res.headers.list.items.len;
 
-    res.status = @as(u16, @intFromEnum(r.response.status));
-
-    const headers_len = r.response.headers.list.items.len;
-
-    var req_headers: C.spin_http_headers_t = undefined;
     if (headers_len > 0) {
-        req_headers.len = headers_len;
+        var res_headers = std.heap.wasm_allocator.alloc(C.spin_http_tuple2_string_string_t, headers_len) catch unreachable;
 
-        req_headers.ptr = @as(*C.spin_http_tuple2_string_string_t, C.malloc(headers_len * @sizeOf(C.spin_http_tuple2_string_string_t)));
-
-        const req_headers_slice: C.spin_http_tuple2_string_string_t = undefined;
-
-        req_headers_slice.ptr = req_headers.ptr;
-        req_headers_slice.len = headers_len;
-
-        for (r.response.headers.list.items, 0..) |field, i| {
-            req_headers_slice[i] = C.spin_http_tuple2_string_string_t{
-                .f0 = C.spin_http_string_t{ .ptr = field.name, .len = field.name.len },
-                .f1 = C.spin_http_string_t{ .ptr = field.value, .len = field.value.len },
+        for (res.headers.list.items, 0..) |header, i| {
+            res_headers[i] = C.spin_http_tuple2_string_string_t{
+                .f0 = C.spin_http_string_t{ .ptr = @constCast(@ptrCast(header.name.ptr)), .len = header.name.len },
+                .f1 = C.spin_http_string_t{ .ptr = @constCast(@ptrCast(header.value.ptr)), .len = header.value.len },
             };
         }
 
-        res.headers = C.spin_http_option_headers_t{ .is_some = true, .val = req_headers };
+        var c_res_headers: C.spin_http_headers_t = undefined;
+        c_res_headers.ptr = @ptrCast(res_headers.ptr);
+        c_res_headers.len = res_headers.len;
+
+        c_res.headers = C.spin_http_option_headers_t{ .is_some = true, .val = c_res_headers };
     } else {
-        res.headers = C.spin_http_option_headers_t{ .is_some = false };
+        c_res.headers = C.spin_http_option_headers_t{ .is_some = false, .val = undefined };
     }
 
-    const body_buf: [BODY_LEN]u8 = undefined;
-    const body_len = try r.readAll(body_buf[0..]);
+    if (res.body.items.len > 0) {
+        var body = std.heap.wasm_allocator.alloc(u8, res.body.items.len) catch unreachable;
+        @memcpy(body, res.body.items[0..]);
 
-    if (body_len > 0) {
-        var body_ptr = @as(*C.uint8_t, C.malloc(body_len));
-        @memcpy(body_ptr, body_buf[0..body_len]);
-
-        res.body = C.spin_http_option_body_t{ .is_some = true, .val = C.spin_http_body_t{ .ptr = body_ptr, .len = body_len } };
+        c_res.body = C.spin_http_option_body_t{ .is_some = true, .val = C.spin_http_body_t{ .ptr = body.ptr, .len = body.len } };
     } else {
-        res.body = C.spin_http_option_body_t{ .is_some = false, .val = undefined };
+        c_res.body = C.spin_http_option_body_t{ .is_some = false, .val = undefined };
     }
 }
 
-// pub fn send(req: *std.http.Client.Request) *std.http.Client.Response {
-//     var spin_req: C.wasi_outbound_http_request_t = undefined;
-//     var spin_res: C.wasi_outbound_http_response_t = undefined;
+pub fn send(req: Request) Error!Response {
+    var c_res: C.wasi_outbound_http_response_t = undefined;
+    var c_req: C.wasi_outbound_http_request_t = undefined;
 
-//     spin_req.method = @intFromEnum(req.method);
+    c_req.method = @intFromEnum(req.method);
 
-//     spin_req.uri = C.wasi_outbound_http_uri_t{ .ptr = req.uri, .len = URI_LEN };
+    c_req.uri = C.wasi_outbound_http_uri_t{ .ptr = @constCast(@ptrCast(req.url.ptr)), .len = req.url.len };
 
-//     spin_req.headers = toOutboundHeaders(req.Header);
-//     spin_req.body = toOutboundReqBody(req.Body);
+    if (req.headers.list.items.len > 0) {
+        c_req.headers.len = req.headers.list.items.len;
 
-//     code = C.wasi_outbound_http_request(&spin_req, &spin_res);
+        var c_req_headers = std.heap.wasm_allocator.alloc(C.wasi_outbound_http_tuple2_string_string_t, req.headers.list.items.len) catch unreachable;
 
-//     return toResponse(&spin_res);
-// }
+        for (req.headers.list.items, 0..) |req_header, i| {
+            c_req_headers[i].f0 = C.wasi_outbound_http_string_t{ .ptr = @constCast(@ptrCast(req_header.name.ptr)), .len = req_header.name.len };
+            c_req_headers[i].f1 = C.wasi_outbound_http_string_t{ .ptr = @constCast(@ptrCast(req_header.value.ptr)), .len = req_header.value.len };
+        }
+
+        c_req.headers.ptr = c_req_headers.ptr;
+    }
+
+    if (req.body.items.len > 0) {
+        c_req.body.is_some = true;
+        c_req.body.val = C.wasi_outbound_http_body_t{ .ptr = @ptrCast(req.body.items.ptr), .len = req.body.items.len };
+    } else {
+        c_req.body.is_some = false;
+    }
+
+    const status_code = C.wasi_outbound_http_request(&c_req, &c_res);
+
+    if (status_code > 0 and status_code < 5) {
+        return ERROR_TAGS[status_code];
+    }
+
+    var res = Response{ .status = std.meta.intToEnum(std.http.Status, c_res.status) catch unreachable };
+
+    if (c_res.body.is_some) {
+        res.body.items.ptr = @ptrCast(c_res.body.val.ptr);
+        res.body.items.len = c_res.body.val.len;
+    }
+
+    if (c_res.headers.is_some) {
+        res.headers = std.http.Headers.init(std.heap.wasm_allocator);
+
+        res.headers.append("Content-Type", "text/plain") catch unreachable;
+
+        var c_res_headers: []C.wasi_outbound_http_tuple2_string_string_t = undefined;
+
+        c_res_headers.ptr = c_res.headers.val.ptr;
+        c_res_headers.len = c_res.headers.val.len;
+
+        var name: []u8 = undefined;
+        var value: []u8 = undefined;
+        for (c_res_headers) |c_res_header| {
+            name.ptr = c_res_header.f0.ptr;
+            name.len = c_res_header.f0.len;
+            value.ptr = c_res_header.f1.ptr;
+            value.len = c_res_header.f1.len;
+            res.headers.append(name, value) catch unreachable;
+        }
+    }
+
+    return res;
+}

@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,23 +22,13 @@ jobs:
       - name: Set up Zig
         uses: goto-bus-stop/setup-zig@v2
 
-      - name: Run tests
+      - name: Set up Spin
+        uses: fermyon/actions/spin/setup@v1
+
+      - name: Run examples
         run: |
           zig env
-          zig build test
-
-      - name: Set up kcov
-        run: sudo apt install kcov
-
-      - name: Generate code coverage report
-        run: zig build cov
-
-      - name: Upload code coverage report to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          directory: kcov-output
-          fail_ci_if_error: true
-          verbose: true
+          zig build example -Dup
 
   lint:
     runs-on: ubuntu-latest

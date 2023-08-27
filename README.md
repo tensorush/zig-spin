@@ -1,7 +1,6 @@
 ## :lizard: :yo_yo: **zig spin**
 
 [![CI][ci-shield]][ci-url]
-[![Codecov][codecov-shield]][codecov-url]
 [![License][license-shield]][license-url]
 
 ### Zig SDK for [Spin](https://github.com/fermyon/spin), a serverless application framework, created by the [Fermyon team](https://www.fermyon.com/).
@@ -48,15 +47,17 @@
 
 > Legend: :green_circle: - tested, :yellow_circle: - untested, :red_circle: - unimplemented.
 
-| Component  |     Status      |           Example            |
-|------------|:---------------:|:----------------------------:|
-| KVS        |  :red_circle:   |    [Click](examples/kvs)     |
-| HTTP       | :yellow_circle: |    [Click](examples/http)    |
-| Redis      |  :red_circle:   |   [Click](examples/redis)    |
-| Config     | :yellow_circle: |   [Click](examples/config)   |
-| SQLite     |  :red_circle:   |   [Click](examples/sqlite)   |
-| MySQL      |  :red_circle:   |   [Click](examples/mysql)    |
-| PostgreSQL |  :red_circle:   | [Click](examples/postgresql) |
+| Component        |     Status      |           Example            |
+|------------------|:---------------:|:----------------------------:|
+| HTTP (outbound)  | :green_circle:  |  [Click](examples/http-out)  |
+| HTTP (inbound)   | :green_circle:  |  [Click](examples/http-in)   |
+| Redis (outbound) |  :red_circle:   | [Click](examples/redis-out)  |
+| Redis (inbound)  |  :red_circle:   |  [Click](examples/redis-in)  |
+| Key-value store  |  :red_circle:   | [Click](examples/key-value)  |
+| PostgreSQL       |  :red_circle:   | [Click](examples/postgresql) |
+| MySQL            |  :red_circle:   |   [Click](examples/mysql)    |
+| SQLite           |  :red_circle:   |   [Click](examples/sqlite)   |
+| Config           | :yellow_circle: |   [Click](examples/config)   |
 
 ### :arrow_down: Dependencies
 
@@ -70,7 +71,5 @@
 
 [ci-shield]: https://img.shields.io/github/actions/workflow/status/tensorush/zig-spin/ci.yaml?branch=main&style=for-the-badge&logo=github&label=CI&labelColor=black
 [ci-url]: https://github.com/tensorush/zig-spin/blob/main/.github/workflows/ci.yaml
-[codecov-shield]: https://img.shields.io/codecov/c/github/tensorush/zig-spin?style=for-the-badge&labelColor=black
-[codecov-url]: https://app.codecov.io/gh/tensorush/zig-spin
 [license-shield]: https://img.shields.io/github/license/tensorush/zig-spin.svg?style=for-the-badge&labelColor=black
 [license-url]: https://github.com/tensorush/zig-spin/blob/main/LICENSE.md

@@ -4,26 +4,34 @@ const C = @cImport({
     @cInclude("spin-config.h");
 });
 
-pub const Error = union(enum) {
-    invalid_schema: []u8,
-    invalid_key: []u8,
-    provider: []u8,
-    other: []u8,
+const ERROR_TAGS = std.meta.tags(Error);
+
+pub const Error = error{
+    Provider,
+    InvalidKey,
+    InvalidSchema,
+    Other,
 };
 
-pub const Result = union(enum) {
-    err: Error,
-    ok: []u8,
-};
+pub fn get(key: []const u8) Error![]const u8 {
+    var c_key = C.spin_config_string_t{ .ptr = @constCast(@ptrCast(key.ptr)), .len = key.len };
+    var c_value: C.spin_config_expected_string_error_t = undefined;
 
-pub fn get(key_ptr: [*c]u8, key_len: usize) C.spin_config_expected_string_error_t {
-    var res: C.spin_config_expected_string_error_t = undefined;
+    C.spin_config_get_config(&c_key, &c_value);
 
-    var spin_key = C.spin_config_string_t{ .ptr = key_ptr, .len = key_len };
-    defer C.spin_config_expected_string_error_free(&res);
-    defer C.spin_config_string_free(&spin_key);
+    defer C.spin_config_expected_string_error_free(&c_value);
+    defer C.spin_config_string_free(&c_key);
 
-    C.spin_config_get_config(&spin_key, &res);
+    if (c_value.is_err) {
+        return ERROR_TAGS[c_value.val.err.tag];
+    }
 
-    return res;
+    var c_ok_slice: []u8 = undefined;
+    c_ok_slice.ptr = c_value.val.ok.ptr;
+    c_ok_slice.len = c_value.val.ok.len;
+
+    var value = std.heap.wasm_allocator.alloc(u8, c_value.val.ok.len) catch unreachable;
+    @memcpy(value, c_ok_slice);
+
+    return value;
 }

@@ -10,7 +10,7 @@ object = { default = "codebase" }
 
 [[component]]
 id = "spin_config_zig"
-source = "../../zig-out/bin/spin-config.wasm"
+source = "../../zig-out/bin/config.wasm"
 
 [component.build]
 command = "zig build example"
