@@ -1,3 +1,6 @@
+//! Config component file containing manual conversions between Zig and Spin HTTP objects
+//! through the auto-generated C bindings for the inbound and outbound HTTP APIs.
+
 const std = @import("std");
 
 const C = @cImport({
@@ -6,6 +9,8 @@ const C = @cImport({
 
 const ERROR_TAGS = std.meta.tags(Error);
 
+/// Config component's error set.
+/// Value order is maintained for integer casting.
 pub const Error = error{
     Provider,
     InvalidKey,
@@ -13,6 +18,8 @@ pub const Error = error{
     Other,
 };
 
+/// Retrieves the config value corresponding to the given key for the current component.
+/// The config key must match one defined in the component manifest.
 pub fn get(key: []const u8) Error![]const u8 {
     var c_key = C.spin_config_string_t{ .ptr = @constCast(@ptrCast(key.ptr)), .len = key.len };
     var c_value: C.spin_config_expected_string_error_t = undefined;

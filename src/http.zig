@@ -1,5 +1,7 @@
+//! HTTP component file containing manually maintained Zig bindings to the
+//! auto-generated C bindings for Spin's inbound and outbound HTTP APIs.
+
 const std = @import("std");
-const spin = @import("spin.zig");
 
 const C = @cImport({
     @cInclude("spin-http.h");
@@ -10,21 +12,23 @@ const C = @cImport({
 pub const HEADER_FULL_URL = "spin-full-url";
 /// The application base path.
 pub const HEADER_BASE_PATH = "spin-base-path";
-/// The request path relative to the component route (including any base).
+/// The request path relative to the component route, including any base.
 pub const HEADER_PATH_INFO = "spin-path-info";
 /// The client address for the request.
 pub const HEADER_CLIENT_ADDR = "spin-client-addr";
-/// The part of the request path that was matched by the route
-/// (including the base and wildcard indicator if present).
+/// The part of the request path that was matched by the route,
+/// including the base and wildcard indicator if present.
 pub const HEADER_MATCHED_ROUTE = "spin-matched-route";
-/// The component route pattern matched, _excluding_ any wildcard indicator.
+/// The component route pattern matched, excluding any wildcard indicator.
 pub const HEADER_COMPONENT_ROOT = "spin-component-route";
-/// The component route pattern matched, as written in the component manifest
-/// (that is, _excluding_ the base, but including the wildcard indicator if present).
+/// The component route pattern matched, as written in the component manifest,
+/// excluding the base, but including the wildcard indicator if present.
 pub const HEADER_RAW_COMPONENT_ROOT = "spin-raw-component-route";
 
 const ERROR_TAGS = std.meta.tags(Error);
 
+/// HTTP component's error set.
+/// Value order is maintained for integer casting.
 pub const Error = error{
     Unused,
     UnallowedDestination,
@@ -33,6 +37,10 @@ pub const Error = error{
     BadRuntime,
 };
 
+/// Handler function for the inbound HTTP request trigger.
+pub var HANDLER: *const fn (Request) Response = undefined;
+
+/// HTTP request.
 pub const Request = struct {
     body: std.ArrayListUnmanaged(u8) = undefined,
     headers: std.http.Headers = undefined,
@@ -40,12 +48,15 @@ pub const Request = struct {
     method: Method,
 };
 
+/// HTTP response.
 pub const Response = struct {
     body: std.ArrayListUnmanaged(u8) = undefined,
     headers: std.http.Headers = undefined,
     status: std.http.Status = .ok,
 };
 
+/// Supported HTTP methods.
+/// Value order is maintained for integer casting.
 pub const Method = enum {
     GET,
     POST,
@@ -56,6 +67,7 @@ pub const Method = enum {
     OPTIONS,
 };
 
+/// Exported to be called from the auto-generated C bindings for Spin's inbound HTTP API.
 pub export fn spin_http_handle_http_request(c_req: *C.spin_http_request_t, c_res: *C.spin_http_response_t) void {
     var req = Request{ .method = std.meta.intToEnum(Method, c_req.method) catch unreachable };
 
@@ -83,7 +95,7 @@ pub export fn spin_http_handle_http_request(c_req: *C.spin_http_request_t, c_res
         }
     }
 
-    const res = spin.HANDLER(req);
+    const res = HANDLER(req);
 
     c_res.status = @as(u16, @intFromEnum(res.status));
 
@@ -118,6 +130,8 @@ pub export fn spin_http_handle_http_request(c_req: *C.spin_http_request_t, c_res
     }
 }
 
+/// Sends the given HTTP request and returns the corresponding HTTP response.
+/// The request destination must be explicitly allowed in the component manifest.
 pub fn send(req: Request) Error!Response {
     var c_res: C.wasi_outbound_http_response_t = undefined;
     var c_req: C.wasi_outbound_http_request_t = undefined;

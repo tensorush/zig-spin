@@ -26,5 +26,5 @@ fn handler(req: spin.http.Request) spin.http.Response {
 }
 
 pub fn main() void {
-    spin.HANDLER = &handler;
+    spin.http.HANDLER = &handler;
 }

@@ -17,13 +17,32 @@ pub fn build(b: *std.Build) void {
 
     b.default_step.dependOn(wit_step);
 
+    // Docs
+    const docs_step = b.step("docs", "Emit docs");
+
+    const obj = b.addObject(.{
+        .name = "spin",
+        .root_source_file = root_source_file,
+        .target = .{ .cpu_arch = .wasm32, .os_tag = .wasi },
+        .optimize = .ReleaseSmall,
+    });
+
+    const docs_install = b.addInstallDirectory(.{
+        .source_dir = obj.getEmittedDocs(),
+        .install_dir = .prefix,
+        .install_subdir = "docs",
+    });
+
+    docs_step.dependOn(&docs_install.step);
+    b.default_step.dependOn(docs_step);
+
     // Examples
     const examples_step = b.step("example", "Install examples");
 
-    const spin_up = b.option(bool, "up", "Run examples.") orelse false;
+    const spin_up = b.option(bool, "up", "Run examples") orelse false;
 
     if (spin_up) {
-        var port = [_]u8{ '3', '0', '0', '0' };
+        var port = [_]u8{ '9', '0', '0', '0' };
         inline for (EXAMPLE_NAMES) |EXAMPLE_NAME| {
             const example_run = b.addSystemCommand(&.{ "spin", "build", "--up", "--listen", "localhost:" ++ port });
             example_run.cwd = EXAMPLES_DIR ++ EXAMPLE_NAME;
@@ -77,6 +96,9 @@ const WIT_NAMES = &.{
     // "outbound-redis",
     // "spin-redis",
     // "key-value",
+    // "outbound-mysql",
+    // "outbound-pg",
+    // "sqlite",
 };
 
 const WIT_IS_IMPORTS = &[WIT_NAMES.len]bool{
@@ -85,6 +107,9 @@ const WIT_IS_IMPORTS = &[WIT_NAMES.len]bool{
     true,
     // true,
     // false,
+    // true,
+    // true,
+    // true,
     // true,
 };
 
@@ -103,6 +128,9 @@ const WIT_C_FILES = &[WIT_NAMES.len][]const u8{
     // SRC_DIR ++ WIT_NAMES[3] ++ ".c",
     // SRC_DIR ++ WIT_NAMES[4] ++ ".c",
     // SRC_DIR ++ WIT_NAMES[5] ++ ".c",
+    // SRC_DIR ++ WIT_NAMES[6] ++ ".c",
+    // SRC_DIR ++ WIT_NAMES[7] ++ ".c",
+    // SRC_DIR ++ WIT_NAMES[8] ++ ".c",
 };
 
 const WIT_C_FLAGS = &.{

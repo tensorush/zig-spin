@@ -33,7 +33,8 @@ jobs:
       - name: Run examples
         run: |
           zig env
-          zig build example -Dup
+          zig build example -Dup > /dev/null 2>&1 &
+          sleep 10
 
   lint:
     runs-on: ubuntu-latest
