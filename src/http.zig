@@ -8,22 +8,22 @@ const C = @cImport({
     @cInclude("wasi-outbound-http.h");
 });
 
-/// The full URL of the request. This includes full host and scheme information.
-pub const HEADER_FULL_URL = "spin-full-url";
-/// The application base path.
-pub const HEADER_BASE_PATH = "spin-base-path";
-/// The request path relative to the component route, including any base.
-pub const HEADER_PATH_INFO = "spin-path-info";
-/// The client address for the request.
-pub const HEADER_CLIENT_ADDR = "spin-client-addr";
-/// The part of the request path that was matched by the route,
+/// Full URL of the request, including full host and scheme information.
+pub const FULL_URL = "spin-full-url";
+/// Application base path.
+pub const BASE_PATH = "spin-base-path";
+/// Request path relative to the component route, including any base.
+pub const PATH_INFO = "spin-path-info";
+/// Client address for the request.
+pub const CLIENT_ADDR = "spin-client-addr";
+/// Route-matched part of the request path,
 /// including the base and wildcard indicator if present.
-pub const HEADER_MATCHED_ROUTE = "spin-matched-route";
-/// The component route pattern matched, excluding any wildcard indicator.
-pub const HEADER_COMPONENT_ROOT = "spin-component-route";
-/// The component route pattern matched, as written in the component manifest,
+pub const MATCHED_ROUTE = "spin-matched-route";
+/// Component route pattern matched, excluding any wildcard indicator.
+pub const COMPONENT_ROOT = "spin-component-route";
+/// Component route pattern matched, as defined in the component manifest,
 /// excluding the base, but including the wildcard indicator if present.
-pub const HEADER_RAW_COMPONENT_ROOT = "spin-raw-component-route";
+pub const RAW_COMPONENT_ROOT = "spin-raw-component-route";
 
 const ERROR_TAGS = std.meta.tags(Error);
 
@@ -90,7 +90,7 @@ pub export fn spin_http_handle_http_request(c_req: *C.spin_http_request_t, c_res
         value.ptr = c_req_header.f1.ptr;
         value.len = c_req_header.f1.len;
         req.headers.append(name, value) catch unreachable;
-        if (std.mem.eql(u8, HEADER_FULL_URL, name)) {
+        if (std.mem.eql(u8, FULL_URL, name)) {
             req.url = value;
         }
     }
