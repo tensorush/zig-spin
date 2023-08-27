@@ -25,6 +25,9 @@ jobs:
       - name: Set up Spin
         uses: fermyon/actions/spin/setup@v1
 
+      - name: Install wit-bindgen-cli
+        run: cargo install --git https://github.com/bytecodealliance/wit-bindgen --rev cb871cf wit-bindgen-cli
+
       - name: Run examples
         run: |
           zig env
