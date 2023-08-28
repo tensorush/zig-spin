@@ -39,13 +39,19 @@ pub fn build(b: *std.Build) void {
     // Docs
     const docs_step = b.step("docs", "Emit docs");
 
+    const obj = b.addObject(.{
+        .name = "docs",
+        .root_source_file = root_source_file,
+        .target = .{ .cpu_arch = .wasm32, .os_tag = .wasi },
+        .optimize = .ReleaseSmall,
+    });
+
     const docs_install = b.addInstallDirectory(.{
-        .source_dir = lib.getEmittedDocs(),
+        .source_dir = obj.getEmittedDocs(),
         .install_dir = .prefix,
         .install_subdir = "docs",
     });
 
-    docs_install.step.dependOn(wit_step);
     docs_step.dependOn(&docs_install.step);
     b.default_step.dependOn(docs_step);
 
