@@ -100,7 +100,7 @@ pub fn build(b: *std.Build) void {
 
 const SRC_DIR = "src/";
 
-const WIT_DIR = "spin/wit/ephemeral/";
+const WIT_DIR = "wit/";
 
 const WIT_NAMES = &.{
     "spin-config",
