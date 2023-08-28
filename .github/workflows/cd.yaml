@@ -38,6 +38,7 @@ jobs:
 
       - name: Emit docs
         run: |
+          pwd
           zig build docs
           rm -rf zig-out/docs/src/std/
 
