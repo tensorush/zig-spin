@@ -1,12 +1,12 @@
+name = "http-out"
 version = "1.0.0"
-name = "spin-http-zig"
 spin_manifest_version = "1"
 trigger = { type = "http", base = "/" }
 authors = ["Jora Troosh <tensorush@gmail.com>"]
 description = "Example application that serves an inbound HTTP request."
 
 [[component]]
-id = "spin_http_zig"
+id = "http-out"
 source = "../../zig-out/bin/http-out.wasm"
 allowed_http_hosts = [
     "https://postman-echo.com",

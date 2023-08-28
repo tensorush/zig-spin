@@ -18,8 +18,6 @@ pub fn build(b: *std.Build) void {
     b.default_step.dependOn(wit_step);
 
     // Library
-    const lib_step = b.step("lib", "Install library");
-
     const lib = b.addStaticLibrary(.{
         .name = "spin",
         .root_source_file = root_source_file,
@@ -31,10 +29,9 @@ pub fn build(b: *std.Build) void {
     lib.addIncludePath(.{ .path = SRC_DIR });
     lib.linkLibC();
 
-    const lib_install = b.addInstallArtifact(lib, .{});
-    lib_install.step.dependOn(wit_step);
-    lib_step.dependOn(&lib_install.step);
-    b.default_step.dependOn(lib_step);
+    lib.step.dependOn(wit_step);
+
+    b.installArtifact(lib);
 
     // Docs
     const docs_step = b.step("docs", "Emit docs");
