@@ -38,7 +38,7 @@ jobs:
 
       - name: Emit docs
         run: |
-          cd ../ && zig build docs
+          zig build docs
           rm -rf zig-out/docs/src/std/
 
       - name: Upload artifact for GitHub Pages
