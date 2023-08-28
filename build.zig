@@ -17,18 +17,30 @@ pub fn build(b: *std.Build) void {
 
     b.default_step.dependOn(wit_step);
 
-    // Docs
-    const docs_step = b.step("docs", "Emit docs");
+    // Library
+    const lib_step = b.step("lib", "Install library");
 
-    const obj = b.addObject(.{
+    const lib = b.addStaticLibrary(.{
         .name = "spin",
         .root_source_file = root_source_file,
         .target = .{ .cpu_arch = .wasm32, .os_tag = .wasi },
         .optimize = .ReleaseSmall,
+        .version = .{ .major = 0, .minor = 3, .patch = 0 },
     });
+    lib.addCSourceFiles(WIT_C_FILES, WIT_C_FLAGS);
+    lib.addIncludePath(.{ .path = SRC_DIR });
+    lib.linkLibC();
+
+    const lib_install = b.addInstallArtifact(lib, .{});
+    lib_install.step.dependOn(wit_step);
+    lib_step.dependOn(&lib_install.step);
+    b.default_step.dependOn(lib_step);
+
+    // Docs
+    const docs_step = b.step("docs", "Emit docs");
 
     const docs_install = b.addInstallDirectory(.{
-        .source_dir = obj.getEmittedDocs(),
+        .source_dir = lib.getEmittedDocs(),
         .install_dir = .prefix,
         .install_subdir = "docs",
     });
@@ -65,13 +77,10 @@ pub fn build(b: *std.Build) void {
             example.linkLibC();
 
             const example_install = b.addInstallArtifact(example, .{});
-
             example_install.step.dependOn(wit_step);
             examples_step.dependOn(&example_install.step);
         }
     }
-
-    b.default_step.dependOn(examples_step);
 
     // Lints
     const lints_step = b.step("lint", "Run lints");

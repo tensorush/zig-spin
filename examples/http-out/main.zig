@@ -1,13 +1,13 @@
 const std = @import("std");
 const spin = @import("spin");
 
-const BODY_LEN: u16 = 1 << 12;
+const BODY_CAP: u8 = 1 << 7;
 
 fn handler(req: spin.http.Request) spin.http.Response {
     var headers = std.http.Headers.init(std.heap.wasm_allocator);
     headers.append("Content-Type", "text/plain") catch unreachable;
 
-    var body = std.ArrayListUnmanaged(u8).initCapacity(std.heap.wasm_allocator, BODY_LEN) catch unreachable;
+    var body = std.ArrayListUnmanaged(u8).initCapacity(std.heap.wasm_allocator, BODY_CAP) catch unreachable;
     var buf_writer = std.io.bufferedWriter(body.writer(std.heap.wasm_allocator));
     const writer = buf_writer.writer();
 
@@ -30,7 +30,7 @@ fn handler(req: spin.http.Request) spin.http.Response {
     writer.print("Request 2:\n  URL: {s}\n  Content-Type: {s}\n  Body: {s}\n\n", .{ req2.url, res2.headers.getFirstValue("content-type").?, res2.body.items }) catch unreachable;
 
     headers.append("foo", "bar") catch unreachable;
-    var req3_body = std.ArrayListUnmanaged(u8).initCapacity(std.heap.wasm_allocator, BODY_LEN) catch unreachable;
+    var req3_body = std.ArrayListUnmanaged(u8).initCapacity(std.heap.wasm_allocator, BODY_CAP) catch unreachable;
     req3_body.appendSliceAssumeCapacity("All your codebase are belong to us!\n");
 
     const req3 = spin.http.Request{ .method = .PUT, .url = "https://postman-echo.com/put", .headers = headers, .body = req3_body };
