@@ -25,7 +25,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = root_source_file,
         .target = .{ .cpu_arch = .wasm32, .os_tag = .wasi },
         .optimize = .ReleaseSmall,
-        .version = .{ .major = 0, .minor = 3, .patch = 0 },
+        .version = .{ .major = 0, .minor = 4, .patch = 0 },
     });
     lib.addCSourceFiles(WIT_C_FILES, WIT_C_FLAGS);
     lib.addIncludePath(.{ .path = SRC_DIR });
