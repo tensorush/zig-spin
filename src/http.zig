@@ -137,7 +137,6 @@ pub fn send(req: Request) Error!Response {
     var c_req: C.wasi_outbound_http_request_t = undefined;
 
     c_req.method = @intFromEnum(req.method);
-
     c_req.uri = C.wasi_outbound_http_uri_t{ .ptr = @constCast(@ptrCast(req.url.ptr)), .len = req.url.len };
 
     if (req.headers.list.items.len > 0) {
@@ -161,7 +160,6 @@ pub fn send(req: Request) Error!Response {
     }
 
     const status_code = C.wasi_outbound_http_request(&c_req, &c_res);
-
     if (status_code > 0 and status_code < 5) {
         return ERROR_TAGS[status_code];
     }
@@ -175,11 +173,9 @@ pub fn send(req: Request) Error!Response {
 
     if (c_res.headers.is_some) {
         res.headers = std.http.Headers.init(std.heap.wasm_allocator);
-
         res.headers.append("Content-Type", "text/plain") catch unreachable;
 
         var c_res_headers: []C.wasi_outbound_http_tuple2_string_string_t = undefined;
-
         c_res_headers.ptr = c_res.headers.val.ptr;
         c_res_headers.len = c_res.headers.val.len;
 
