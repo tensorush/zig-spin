@@ -96,10 +96,8 @@ pub export fn spin_http_handle_http_request(c_req: *C.spin_http_request_t, c_res
     }
 
     const res = HANDLER(req);
-
-    c_res.status = @as(u16, @intFromEnum(res.status));
-
     const headers_len = res.headers.list.items.len;
+    c_res.status = @as(u16, @intFromEnum(res.status));
 
     if (headers_len > 0) {
         var res_headers = std.heap.wasm_allocator.alloc(C.spin_http_tuple2_string_string_t, headers_len) catch unreachable;
