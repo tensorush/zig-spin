@@ -49,16 +49,18 @@
 
 > Legend: :green_circle: - tested, :yellow_circle: - untested, :red_circle: - unimplemented.
 
-| Component                     |     Status      |           Example            |
-|-------------------------------|:---------------:|:----------------------------:|
-| [HTTP (in + out)](src/http)   | :green_circle:  |    [Click](examples/http)    |
-| [Redis (in + out)](src/redis) |  :red_circle:   |   [Click](examples/redis)    |
-| [PostgreSQL](src/postgresql)  |  :red_circle:   | [Click](examples/postgresql) |
-| [MySQL](src/mysql)            |  :red_circle:   |   [Click](examples/mysql)    |
-| [SQLite](src/sqlite)          |  :red_circle:   |   [Click](examples/sqlite)   |
-| [Config](src/config)          | :yellow_circle: |   [Click](examples/config)   |
-| [KVS](src/kvs)                |  :red_circle:   |    [Click](examples/kvs)     |
-| [LLM](src/llm)                |  :red_circle:   |    [Click](examples/llm)     |
+| Component                            |     Status      |           Example            |
+|--------------------------------------|:---------------:|:----------------------------:|
+| [HTTP (outbound)](src/http.zig#L133) | :green_circle:  |  [Click](examples/http-out)  |
+| [HTTP (inbound)](src/http.zig#L71)   | :green_circle:  |  [Click](examples/http-in)   |
+| [Redis (outbound)](src/redis.zig)    |  :red_circle:   | [Click](examples/redis-out)  |
+| [Redis (inbound)](src/redis.zig)     |  :red_circle:   |  [Click](examples/redis-in)  |
+| [PostgreSQL](src/postgresql.zig)     |  :red_circle:   | [Click](examples/postgresql) |
+| [MySQL](src/mysql.zig)               |  :red_circle:   |   [Click](examples/mysql)    |
+| [SQLite](src/sqlite.zig)             |  :red_circle:   |   [Click](examples/sqlite)   |
+| [Config](src/config.zig#L23)         | :yellow_circle: |   [Click](examples/config)   |
+| [KVS](src/kvs.zig)                   |  :red_circle:   |    [Click](examples/kvs)     |
+| [LLM](src/llm.zig)                   |  :red_circle:   |    [Click](examples/llm)     |
 
 ### :arrow_down: Dependencies
 
