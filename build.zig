@@ -9,8 +9,12 @@ pub fn build(b: *std.Build) void {
     // WIT bindings
     const wit_step = b.step("wit", "Generate WIT bindings for C guest modules");
 
-    inline for (WIT_NAMES, 0..) |WIT_NAME, i| {
-        const wit_run = b.addSystemCommand(&.{ "wit-bindgen", "c", if (WIT_IS_IMPORTS[i]) "-i" else "-e", WIT_DIR ++ WIT_NAME ++ ".wit", "--out-dir", SRC_DIR });
+    inline for (WIT_NAMES, WIT_IS_IMPORTS) |WIT_NAME, WIT_IS_IMPORT| {
+        const wit_run = b.addSystemCommand(&.{
+            "wit-bindgen",                     "c",
+            if (WIT_IS_IMPORT) "-i" else "-e", WIT_DIR ++ WIT_NAME ++ ".wit",
+            "--out-dir",                       SRC_DIR,
+        });
 
         wit_step.dependOn(&wit_run.step);
     }
@@ -23,7 +27,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = root_source_file,
         .target = .{ .cpu_arch = .wasm32, .os_tag = .wasi },
         .optimize = .ReleaseSmall,
-        .version = .{ .major = 0, .minor = 4, .patch = 0 },
+        .version = .{ .major = 0, .minor = 4, .patch = 1 },
     });
     lib.addCSourceFiles(WIT_C_FILES, WIT_C_FLAGS);
     lib.addIncludePath(.{ .path = SRC_DIR });
@@ -100,50 +104,52 @@ pub fn build(b: *std.Build) void {
 
 const SRC_DIR = "src/";
 
-const WIT_DIR = "wit/";
+const EXAMPLES_DIR = "examples/";
+
+const WIT_DIR = "spin/wit/ephemeral/";
+
+const EXAMPLE_NAMES = &.{
+    "http-out",
+    "http-in",
+    // "redis",
+    // "kvs",
+    // "postgresql",
+    // "mysql",
+    // "sqlite",
+    // "config",
+    // "llm",
+};
 
 const WIT_NAMES = &.{
-    "spin-config",
-    "spin-http",
     "wasi-outbound-http",
+    "spin-http",
     // "outbound-redis",
     // "spin-redis",
     // "key-value",
-    // "outbound-mysql",
     // "outbound-pg",
+    // "outbound-mysql",
     // "sqlite",
+    "spin-config",
+    // "llm",
 };
 
 const WIT_IS_IMPORTS = &[WIT_NAMES.len]bool{
     true,
     false,
-    true,
-    // true,
     // false,
     // true,
     // true,
     // true,
     // true,
-};
-
-const EXAMPLES_DIR = "examples/";
-
-const EXAMPLE_NAMES = &.{
-    // "config",
-    "http-in",
-    "http-out",
+    // true,
+    true,
+    // true,
 };
 
 const WIT_C_FILES = &[WIT_NAMES.len][]const u8{
     SRC_DIR ++ WIT_NAMES[0] ++ ".c",
     SRC_DIR ++ WIT_NAMES[1] ++ ".c",
     SRC_DIR ++ WIT_NAMES[2] ++ ".c",
-    // SRC_DIR ++ WIT_NAMES[3] ++ ".c",
-    // SRC_DIR ++ WIT_NAMES[4] ++ ".c",
-    // SRC_DIR ++ WIT_NAMES[5] ++ ".c",
-    // SRC_DIR ++ WIT_NAMES[6] ++ ".c",
-    // SRC_DIR ++ WIT_NAMES[7] ++ ".c",
-    // SRC_DIR ++ WIT_NAMES[8] ++ ".c",
 };
 
 const WIT_C_FLAGS = &.{

@@ -49,17 +49,16 @@
 
 > Legend: :green_circle: - tested, :yellow_circle: - untested, :red_circle: - unimplemented.
 
-| Component        |     Status      |           Example            |
-|------------------|:---------------:|:----------------------------:|
-| HTTP (outbound)  | :green_circle:  |  [Click](examples/http-out)  |
-| HTTP (inbound)   | :green_circle:  |  [Click](examples/http-in)   |
-| Redis (outbound) |  :red_circle:   | [Click](examples/redis-out)  |
-| Redis (inbound)  |  :red_circle:   |  [Click](examples/redis-in)  |
-| Key-value store  |  :red_circle:   | [Click](examples/key-value)  |
-| PostgreSQL       |  :red_circle:   | [Click](examples/postgresql) |
-| MySQL            |  :red_circle:   |   [Click](examples/mysql)    |
-| SQLite           |  :red_circle:   |   [Click](examples/sqlite)   |
-| Config           | :yellow_circle: |   [Click](examples/config)   |
+| Component                     |     Status      |           Example            |
+|-------------------------------|:---------------:|:----------------------------:|
+| [HTTP (in + out)](src/http)   | :green_circle:  |    [Click](examples/http)    |
+| [Redis (in + out)](src/redis) |  :red_circle:   |   [Click](examples/redis)    |
+| [PostgreSQL](src/postgresql)  |  :red_circle:   | [Click](examples/postgresql) |
+| [MySQL](src/mysql)            |  :red_circle:   |   [Click](examples/mysql)    |
+| [SQLite](src/sqlite)          |  :red_circle:   |   [Click](examples/sqlite)   |
+| [Config](src/config)          | :yellow_circle: |   [Click](examples/config)   |
+| [KVS](src/kvs)                |  :red_circle:   |    [Click](examples/kvs)     |
+| [LLM](src/llm)                |  :red_circle:   |    [Click](examples/llm)     |
 
 ### :arrow_down: Dependencies
 
