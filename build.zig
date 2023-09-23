@@ -27,13 +27,11 @@ pub fn build(b: *std.Build) void {
         .root_source_file = root_source_file,
         .target = .{ .cpu_arch = .wasm32, .os_tag = .wasi },
         .optimize = .ReleaseSmall,
-        .version = .{ .major = 0, .minor = 4, .patch = 1 },
+        .version = .{ .major = 0, .minor = 4, .patch = 2 },
     });
     lib.addCSourceFiles(WIT_C_FILES, WIT_C_FLAGS);
     lib.addIncludePath(.{ .path = SRC_DIR });
     lib.linkLibC();
-
-    lib.step.dependOn(wit_step);
 
     b.installArtifact(lib);
 
