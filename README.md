@@ -2,8 +2,8 @@
 
 [![CI][ci-shield]][ci-url]
 [![CD][cd-shield]][cd-url]
-[![Docs][docs-shield]][docs-url]
-[![License][license-shield]][license-url]
+[![DC][docs-shield]][docs-url]
+[![LC][license-shield]][license-url]
 
 ### Zig SDK for [Spin](https://github.com/fermyon/spin), a serverless application framework, created by the [Fermyon team](https://www.fermyon.com/).
 
