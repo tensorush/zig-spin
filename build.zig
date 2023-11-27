@@ -43,10 +43,10 @@ pub fn build(b: *std.Build) void {
     });
     lib.addCSourceFiles(WIT_C_FILES, WIT_C_FLAGS);
     lib.addIncludePath(.{ .path = SRC_DIR });
+    lib.step.dependOn(wit_step);
     lib.linkLibC();
 
     b.installArtifact(lib);
-    lib_step.dependOn(wit_step);
     lib_step.dependOn(&lib.step);
     b.default_step.dependOn(lib_step);
 
