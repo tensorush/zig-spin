@@ -22,18 +22,23 @@ pub fn build(b: *std.Build) void {
     b.default_step.dependOn(wit_step);
 
     // Library
+    const lib_step = b.step("lib", "Install library");
+
     const lib = b.addStaticLibrary(.{
         .name = "spin",
         .root_source_file = root_source_file,
         .target = .{ .cpu_arch = .wasm32, .os_tag = .wasi },
         .optimize = .ReleaseSmall,
-        .version = .{ .major = 0, .minor = 4, .patch = 2 },
+        .version = .{ .major = 0, .minor = 5, .patch = 0 },
     });
     lib.addCSourceFiles(WIT_C_FILES, WIT_C_FLAGS);
     lib.addIncludePath(.{ .path = SRC_DIR });
+    lib.step.dependOn(wit_step);
     lib.linkLibC();
 
     b.installArtifact(lib);
+    lib_step.dependOn(&lib.step);
+    b.default_step.dependOn(lib_step);
 
     // Docs
     const docs_step = b.step("docs", "Emit docs");
@@ -87,6 +92,8 @@ pub fn build(b: *std.Build) void {
             examples_step.dependOn(&example_install.step);
         }
     }
+
+    b.default_step.dependOn(examples_step);
 
     // Lints
     const lints_step = b.step("lint", "Run lints");

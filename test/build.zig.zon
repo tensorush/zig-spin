@@ -1,0 +1,10 @@
+.{
+    .name = "test-spin",
+    .version = "1.0.0",
+    .dependencies = .{
+        .spin = .{
+            .url = "https://github.com/tensorush/zig-spin/archive/v0.4.2.tar.gz",
+            .hash = "1220046be09b258c51899d9d082c55f34d7e7b8c0c202878fc18f67794172874a4a0",
+        },
+    },
+}
