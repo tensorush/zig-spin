@@ -109,9 +109,9 @@ pub fn build(b: *std.Build) void {
 
 const SRC_DIR = "src/";
 
-const EXAMPLES_DIR = "examples/";
+const WIT_DIR = "wit/";
 
-const WIT_DIR = "spin/wit/ephemeral/";
+const EXAMPLES_DIR = "examples/";
 
 const EXAMPLE_NAMES = &.{
     "http-out",
