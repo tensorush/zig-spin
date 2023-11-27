@@ -56,6 +56,7 @@ pub fn build(b: *std.Build) void {
         .install_subdir = "docs",
     });
 
+    docs_step.dependOn(lib_step);
     docs_step.dependOn(&docs_install.step);
     b.default_step.dependOn(docs_step);
 
