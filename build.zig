@@ -6,8 +6,8 @@ pub fn build(b: *std.Build) void {
     // Module
     const spin_mod = b.addModule("spin", .{ .source_file = root_source_file });
 
-    // WIT bindings
-    const wit_step = b.step("wit", "Generate WIT bindings for C guest modules");
+    // WIT C bindings
+    const wit_step = b.step("wit", "Generate WIT C bindings for guest modules");
 
     inline for (WIT_NAMES, WIT_IS_IMPORTS) |WIT_NAME, WIT_IS_IMPORT| {
         const wit_run = b.addSystemCommand(&.{
@@ -19,6 +19,13 @@ pub fn build(b: *std.Build) void {
         wit_step.dependOn(&wit_run.step);
     }
 
+    const wit_headers_install = b.addWriteFiles();
+
+    inline for (WIT_NAMES) |WIT_NAME| {
+        _ = wit_headers_install.addCopyFileToSource(.{ .path = SRC_DIR ++ WIT_NAME ++ ".h" }, SRC_DIR ++ WIT_NAME ++ ".h");
+    }
+
+    wit_step.dependOn(&wit_headers_install.step);
     b.default_step.dependOn(wit_step);
 
     // Library
