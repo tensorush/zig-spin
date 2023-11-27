@@ -33,25 +33,18 @@ pub fn build(b: *std.Build) void {
     });
     lib.addCSourceFiles(WIT_C_FILES, WIT_C_FLAGS);
     lib.addIncludePath(.{ .path = SRC_DIR });
-    lib.step.dependOn(wit_step);
     lib.linkLibC();
 
     b.installArtifact(lib);
+    lib_step.dependOn(wit_step);
     lib_step.dependOn(&lib.step);
     b.default_step.dependOn(lib_step);
 
     // Docs
     const docs_step = b.step("docs", "Emit docs");
 
-    const obj = b.addObject(.{
-        .name = "docs",
-        .root_source_file = root_source_file,
-        .target = .{ .cpu_arch = .wasm32, .os_tag = .wasi },
-        .optimize = .ReleaseSmall,
-    });
-
     const docs_install = b.addInstallDirectory(.{
-        .source_dir = obj.getEmittedDocs(),
+        .source_dir = lib.getEmittedDocs(),
         .install_dir = .prefix,
         .install_subdir = "docs",
     });
@@ -155,6 +148,13 @@ const WIT_C_FILES = &[WIT_NAMES.len][]const u8{
     SRC_DIR ++ WIT_NAMES[0] ++ ".c",
     SRC_DIR ++ WIT_NAMES[1] ++ ".c",
     SRC_DIR ++ WIT_NAMES[2] ++ ".c",
+    // SRC_DIR ++ WIT_NAMES[3] ++ ".c",
+    // SRC_DIR ++ WIT_NAMES[4] ++ ".c",
+    // SRC_DIR ++ WIT_NAMES[5] ++ ".c",
+    // SRC_DIR ++ WIT_NAMES[6] ++ ".c",
+    // SRC_DIR ++ WIT_NAMES[7] ++ ".c",
+    // SRC_DIR ++ WIT_NAMES[8] ++ ".c",
+    // SRC_DIR ++ WIT_NAMES[9] ++ ".c",
 };
 
 const WIT_C_FLAGS = &.{
