@@ -22,7 +22,10 @@ pub fn build(b: *std.Build) void {
     const wit_headers_install = b.addWriteFiles();
 
     inline for (WIT_NAMES) |WIT_NAME| {
-        _ = wit_headers_install.addCopyFileToSource(.{ .path = SRC_DIR ++ WIT_NAME ++ ".h" }, SRC_DIR ++ WIT_NAME ++ ".h");
+        _ = wit_headers_install.addCopyFileToSource(
+            .{ .path = SRC_DIR ++ WIT_NAME ++ ".h" },
+            SRC_DIR ++ WIT_NAME ++ ".h",
+        );
     }
 
     wit_step.dependOn(&wit_headers_install.step);
@@ -56,7 +59,6 @@ pub fn build(b: *std.Build) void {
         .install_subdir = "docs",
     });
 
-    docs_step.dependOn(lib_step);
     docs_step.dependOn(&docs_install.step);
     b.default_step.dependOn(docs_step);
 

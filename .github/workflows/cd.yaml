@@ -33,6 +33,9 @@ jobs:
         with:
           version: 0.11.0
 
+      - name: Install wit-bindgen-cli
+        run: cargo install --git https://github.com/bytecodealliance/wit-bindgen --rev cb871cf wit-bindgen-cli
+
       - name: Emit docs
         run: |
           zig build docs
