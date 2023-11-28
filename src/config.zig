@@ -37,7 +37,7 @@ pub fn get(key: []const u8) Error![]const u8 {
     c_ok_slice.ptr = c_value.val.ok.ptr;
     c_ok_slice.len = c_value.val.ok.len;
 
-    var value = std.heap.wasm_allocator.alloc(u8, c_value.val.ok.len) catch unreachable;
+    const value = std.heap.wasm_allocator.alloc(u8, c_value.val.ok.len) catch unreachable;
     @memcpy(value, c_ok_slice);
 
     return value;

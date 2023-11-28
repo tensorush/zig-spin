@@ -38,7 +38,7 @@ pub fn build(b: *std.Build) void {
         .optimize = .ReleaseSmall,
         .version = .{ .major = 0, .minor = 5, .patch = 0 },
     });
-    lib.addCSourceFiles(WIT_C_FILES, WIT_C_FLAGS);
+    lib.addCSourceFiles(.{ .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
     lib.addIncludePath(.{ .path = INC_DIR });
     lib.step.dependOn(wit_step);
     lib.linkLibC();
@@ -72,7 +72,7 @@ pub fn build(b: *std.Build) void {
         var port = [_]u8{ '9', '0', '0', '0' };
         inline for (EXAMPLE_NAMES) |EXAMPLE_NAME| {
             const example_run = b.addSystemCommand(&.{ "spin", "build", "--up", "--listen", "localhost:" ++ port });
-            example_run.cwd = EXAMPLES_DIR ++ EXAMPLE_NAME;
+            example_run.setCwd(.{ .path = EXAMPLES_DIR ++ EXAMPLE_NAME });
             port[3] += 1;
 
             example_run.step.dependOn(wit_step);
@@ -86,7 +86,7 @@ pub fn build(b: *std.Build) void {
                 .target = .{ .cpu_arch = .wasm32, .os_tag = .wasi },
                 .optimize = .ReleaseSmall,
             });
-            example.addCSourceFiles(WIT_C_FILES, WIT_C_FLAGS);
+            example.addCSourceFiles(.{ .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
             example.addIncludePath(.{ .path = INC_DIR });
             example.addModule("spin", spin_mod);
             example.linkLibC();

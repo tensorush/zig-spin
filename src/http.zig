@@ -119,7 +119,7 @@ pub export fn spin_http_handle_http_request(c_req: *C.spin_http_request_t, c_res
     }
 
     if (res.body.items.len > 0) {
-        var body = std.heap.wasm_allocator.alloc(u8, res.body.items.len) catch unreachable;
+        const body = std.heap.wasm_allocator.alloc(u8, res.body.items.len) catch unreachable;
         @memcpy(body, res.body.items[0..]);
 
         c_res.body = C.spin_http_option_body_t{ .is_some = true, .val = C.spin_http_body_t{ .ptr = body.ptr, .len = body.len } };
