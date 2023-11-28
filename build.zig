@@ -13,7 +13,7 @@ pub fn build(b: *std.Build) void {
         const wit_run = b.addSystemCommand(&.{
             "wit-bindgen",                     "c",
             if (WIT_IS_IMPORT) "-i" else "-e", WIT_DIR ++ WIT_NAME ++ ".wit",
-            "--out-dir",                       SRC_DIR,
+            "--out-dir",                       INC_DIR,
         });
 
         wit_step.dependOn(&wit_run.step);
@@ -21,11 +21,8 @@ pub fn build(b: *std.Build) void {
 
     const wit_headers_install = b.addWriteFiles();
 
-    inline for (WIT_NAMES) |WIT_NAME| {
-        _ = wit_headers_install.addCopyFileToSource(
-            .{ .path = SRC_DIR ++ WIT_NAME ++ ".h" },
-            SRC_DIR ++ WIT_NAME ++ ".h",
-        );
+    inline for (WIT_C_HEADERS) |WIT_C_HEADER| {
+        _ = wit_headers_install.addCopyFileToSource(.{ .path = WIT_C_HEADER }, WIT_C_HEADER);
     }
 
     wit_step.dependOn(&wit_headers_install.step);
@@ -42,9 +39,13 @@ pub fn build(b: *std.Build) void {
         .version = .{ .major = 0, .minor = 5, .patch = 0 },
     });
     lib.addCSourceFiles(WIT_C_FILES, WIT_C_FLAGS);
-    lib.addIncludePath(.{ .path = SRC_DIR });
+    lib.addIncludePath(.{ .path = INC_DIR });
     lib.step.dependOn(wit_step);
     lib.linkLibC();
+
+    for (WIT_C_HEADERS) |WIT_C_HEADER| {
+        lib.installHeader(WIT_C_HEADER, std.fs.path.basename(WIT_C_HEADER));
+    }
 
     b.installArtifact(lib);
     lib_step.dependOn(&lib.step);
@@ -86,7 +87,7 @@ pub fn build(b: *std.Build) void {
                 .optimize = .ReleaseSmall,
             });
             example.addCSourceFiles(WIT_C_FILES, WIT_C_FLAGS);
-            example.addIncludePath(.{ .path = SRC_DIR });
+            example.addIncludePath(.{ .path = INC_DIR });
             example.addModule("spin", spin_mod);
             example.linkLibC();
 
@@ -115,6 +116,8 @@ const SRC_DIR = "src/";
 const WIT_DIR = "wit/";
 
 const EXAMPLES_DIR = "examples/";
+
+const INC_DIR = SRC_DIR ++ "include/";
 
 const EXAMPLE_NAMES = &.{
     "http-out",
@@ -155,16 +158,29 @@ const WIT_IS_IMPORTS = &[WIT_NAMES.len]bool{
 };
 
 const WIT_C_FILES = &[WIT_NAMES.len][]const u8{
-    SRC_DIR ++ WIT_NAMES[0] ++ ".c",
-    SRC_DIR ++ WIT_NAMES[1] ++ ".c",
-    SRC_DIR ++ WIT_NAMES[2] ++ ".c",
-    // SRC_DIR ++ WIT_NAMES[3] ++ ".c",
-    // SRC_DIR ++ WIT_NAMES[4] ++ ".c",
-    // SRC_DIR ++ WIT_NAMES[5] ++ ".c",
-    // SRC_DIR ++ WIT_NAMES[6] ++ ".c",
-    // SRC_DIR ++ WIT_NAMES[7] ++ ".c",
-    // SRC_DIR ++ WIT_NAMES[8] ++ ".c",
-    // SRC_DIR ++ WIT_NAMES[9] ++ ".c",
+    INC_DIR ++ WIT_NAMES[0] ++ ".c",
+    INC_DIR ++ WIT_NAMES[1] ++ ".c",
+    INC_DIR ++ WIT_NAMES[2] ++ ".c",
+    // INC_DIR ++ WIT_NAMES[3] ++ ".c",
+    // INC_DIR ++ WIT_NAMES[4] ++ ".c",
+    // INC_DIR ++ WIT_NAMES[5] ++ ".c",
+    // INC_DIR ++ WIT_NAMES[6] ++ ".c",
+    // INC_DIR ++ WIT_NAMES[7] ++ ".c",
+    // INC_DIR ++ WIT_NAMES[8] ++ ".c",
+    // INC_DIR ++ WIT_NAMES[9] ++ ".c",
+};
+
+const WIT_C_HEADERS = &[WIT_NAMES.len][]const u8{
+    INC_DIR ++ WIT_NAMES[0] ++ ".h",
+    INC_DIR ++ WIT_NAMES[1] ++ ".h",
+    INC_DIR ++ WIT_NAMES[2] ++ ".h",
+    // INC_DIR ++ WIT_NAMES[3] ++ ".h",
+    // INC_DIR ++ WIT_NAMES[4] ++ ".h",
+    // INC_DIR ++ WIT_NAMES[5] ++ ".h",
+    // INC_DIR ++ WIT_NAMES[6] ++ ".h",
+    // INC_DIR ++ WIT_NAMES[7] ++ ".h",
+    // INC_DIR ++ WIT_NAMES[8] ++ ".h",
+    // INC_DIR ++ WIT_NAMES[9] ++ ".h",
 };
 
 const WIT_C_FLAGS = &.{
