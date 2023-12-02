@@ -26,7 +26,6 @@ pub fn build(b: *std.Build) void {
     }
 
     wit_step.dependOn(&wit_headers_install.step);
-    b.default_step.dependOn(wit_step);
 
     // Library
     const lib_step = b.step("lib", "Install library");
@@ -75,7 +74,6 @@ pub fn build(b: *std.Build) void {
             example_run.setCwd(.{ .path = EXAMPLES_DIR ++ EXAMPLE_NAME });
             port[3] += 1;
 
-            example_run.step.dependOn(wit_step);
             examples_step.dependOn(&example_run.step);
         }
     } else {
