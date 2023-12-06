@@ -1,0 +1,17 @@
+spin_manifest_version = 2
+
+[application]
+name = "test"
+version = "1.0.0"
+authors = ["Jora Troosh <tensorush@gmail.com>"]
+description = "Example application that serves an inbound HTTP request."
+
+[[trigger.http]]
+route = "/..."
+component = "test"
+
+[component.test]
+source = "zig-out/bin/test.wasm"
+
+[component.test.build]
+command = "zig build test"
