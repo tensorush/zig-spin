@@ -35,7 +35,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = root_source_file,
         .target = .{ .cpu_arch = .wasm32, .os_tag = .wasi },
         .optimize = .ReleaseSmall,
-        .version = .{ .major = 0, .minor = 6, .patch = 0 },
+        .version = .{ .major = 0, .minor = 6, .patch = 1 },
     });
     lib.addCSourceFiles(.{ .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
     lib.addIncludePath(.{ .path = INC_DIR });

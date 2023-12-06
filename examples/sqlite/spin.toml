@@ -1,18 +1,18 @@
+spin_manifest_version = 2
+
+[application]
 name = "sqlite"
 version = "1.0.0"
-spin_manifest_version = "1"
-trigger = { type = "http", base = "/" }
 authors = ["Jora Troosh <tensorush@gmail.com>"]
-description = "Example application that reads a sqlite message."
+description = "Example application that reads a SQLite message."
 
-[[component]]
-id = "sqlite"
-sqlite_databases = ["default"]
+[[trigger.http]]
+route = "/..."
+component = "sqlite"
+
+[component.sqlite]
 source = "../../zig-out/bin/sqlite.wasm"
 
-[component.build]
-command = "zig build example"
+[component.sqlite.build]
 workdir = "../../"
-
-[component.trigger]
-route = "/..."
+command = "zig build example"

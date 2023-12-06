@@ -1,17 +1,18 @@
+spin_manifest_version = 2
+
+[application]
 name = "http-in"
 version = "1.0.0"
-spin_manifest_version = "1"
-trigger = { type = "http", base = "/" }
 authors = ["Jora Troosh <tensorush@gmail.com>"]
 description = "Example application that serves an inbound HTTP request."
 
-[[component]]
-id = "http-in"
+[[trigger.http]]
+route = "/..."
+component = "http-in"
+
+[component.http-in]
 source = "../../zig-out/bin/http-in.wasm"
 
-[component.build]
-command = "zig build example"
+[component.http-in.build]
 workdir = "../../"
-
-[component.trigger]
-route = "/..."
+command = "zig build example"

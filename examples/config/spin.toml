@@ -1,23 +1,24 @@
+spin_manifest_version = 2
+
+[application]
 name = "config"
 version = "1.0.0"
-spin_manifest_version = "1"
-trigger = { type = "http", base = "/" }
 authors = ["Jora Troosh <tensorush@gmail.com>"]
 description = "Example application that reads a config message."
 
 [variables]
 object = { default = "codebase" }
 
-[[component]]
-id = "config"
-source = "../../zig-out/bin/config.wasm"
-
-[component.build]
-command = "zig build example"
-workdir = "../../"
+[[trigger.http]]
+route = "/..."
+component = "config"
 
 [component.config]
-message = "All your {{object}} are belong to us"
+source = "../../zig-out/bin/config.wasm"
 
-[component.trigger]
-route = "/..."
+[component.config.build]
+workdir = "../../"
+command = "zig build example"
+
+[component.config.variables]
+message = "All your {{object}} are belong to us!"

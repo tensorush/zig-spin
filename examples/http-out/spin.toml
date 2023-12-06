@@ -1,21 +1,23 @@
+spin_manifest_version = 2
+
+[application]
 name = "http-out"
 version = "1.0.0"
-spin_manifest_version = "1"
-trigger = { type = "http", base = "/" }
 authors = ["Jora Troosh <tensorush@gmail.com>"]
-description = "Example application that serves an inbound HTTP request."
+description = "Example application that sends an outbound HTTP request."
 
-[[component]]
-id = "http-out"
+[[trigger.http]]
+route = "/..."
+component = "http-out"
+
+[component.http-out]
 source = "../../zig-out/bin/http-out.wasm"
 allowed_http_hosts = [
+    "https://fermyon.com",
     "https://postman-echo.com",
     "https://random-data-api.fermyon.app",
 ]
 
-[component.build]
-command = "zig build example"
+[component.http-out.build]
 workdir = "../../"
-
-[component.trigger]
-route = "/..."
+command = "zig build example"
