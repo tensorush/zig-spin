@@ -10,35 +10,30 @@ const C = @cImport({
 const ERROR_TAGS = std.meta.tags(Error);
 
 /// Config component's error set.
-/// Value order is maintained for integer casting.
+/// Order is preserved for integer casting.
 pub const Error = error{
     Provider,
     InvalidKey,
     InvalidSchema,
     Other,
-};
+} || std.mem.Allocator.Error;
 
 /// Retrieves the config value corresponding to the given key for the current component.
 /// The config key must match one defined in the component manifest.
 pub fn get(key: []const u8) Error![]const u8 {
     var c_key = C.spin_config_string_t{ .ptr = @constCast(@ptrCast(key.ptr)), .len = key.len };
-    var c_value: C.spin_config_expected_string_error_t = undefined;
+    var c_str: C.spin_config_expected_string_error_t = undefined;
 
-    C.spin_config_get_config(&c_key, &c_value);
+    C.spin_config_get_config(&c_key, &c_str);
+    defer C.spin_config_expected_string_error_free(&c_str);
 
-    defer C.spin_config_expected_string_error_free(&c_value);
-    defer C.spin_config_string_free(&c_key);
-
-    if (c_value.is_err) {
-        return ERROR_TAGS[c_value.val.err.tag];
+    if (c_str.is_err) {
+        return ERROR_TAGS[c_str.val.err.tag];
     }
 
-    var c_ok_slice: []u8 = undefined;
-    c_ok_slice.ptr = c_value.val.ok.ptr;
-    c_ok_slice.len = c_value.val.ok.len;
+    var c_str_ok: []u8 = undefined;
+    c_str_ok.ptr = c_str.val.ok.ptr;
+    c_str_ok.len = c_str.val.ok.len;
 
-    const value = std.heap.wasm_allocator.alloc(u8, c_value.val.ok.len) catch unreachable;
-    @memcpy(value, c_ok_slice);
-
-    return value;
+    return try std.heap.wasm_allocator.dupe(u8, c_str_ok);
 }

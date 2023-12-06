@@ -5,9 +5,11 @@
 [![DC][docs-shield]][docs-url]
 [![LC][license-shield]][license-url]
 
-### Zig SDK for [Spin](https://github.com/fermyon/spin), a serverless application framework, created by the [Fermyon team](https://www.fermyon.com/).
+### Zig SDK for the [Spin](https://github.com/fermyon/spin) serverless application framework created by the [Fermyon team](https://www.fermyon.com/).
 
 ### :rocket: Usage
+
+> #### [**WIP**! Haven't yet figured out a way to correctly package the library with the Zig package manager.](tests/)
 
 1. Add `spin` as a dependency in your `build.zig.zon`.
 
@@ -50,18 +52,18 @@
 
 > Legend: :green_circle: - tested, :yellow_circle: - untested, :red_circle: - unimplemented.
 
-| Component                            |     Status      |           Example            |
-|--------------------------------------|:---------------:|:----------------------------:|
-| [HTTP (outbound)](src/http.zig#L133) | :green_circle:  |  [Click](examples/http-out)  |
-| [HTTP (inbound)](src/http.zig#L71)   | :green_circle:  |  [Click](examples/http-in)   |
-| [Redis (outbound)](src/redis.zig)    |  :red_circle:   | [Click](examples/redis-out)  |
-| [Redis (inbound)](src/redis.zig)     |  :red_circle:   |  [Click](examples/redis-in)  |
-| [PostgreSQL](src/postgresql.zig)     |  :red_circle:   | [Click](examples/postgresql) |
-| [MySQL](src/mysql.zig)               |  :red_circle:   |   [Click](examples/mysql)    |
-| [SQLite](src/sqlite.zig)             |  :red_circle:   |   [Click](examples/sqlite)   |
-| [Config](src/config.zig#L23)         | :yellow_circle: |   [Click](examples/config)   |
-| [KVS](src/kvs.zig)                   |  :red_circle:   |    [Click](examples/kvs)     |
-| [LLM](src/llm.zig)                   |  :red_circle:   |    [Click](examples/llm)     |
+| Component                            |     Status     |           Example            |
+|--------------------------------------|:--------------:|:----------------------------:|
+| [HTTP (outbound)](src/http.zig#L133) | :green_circle: |  [Click](examples/http-out)  |
+| [HTTP (inbound)](src/http.zig#L71)   | :green_circle: |  [Click](examples/http-in)   |
+| [Redis (outbound)](src/redis.zig)    |  :red_circle:  | [Click](examples/redis-out)  |
+| [Redis (inbound)](src/redis.zig)     |  :red_circle:  |  [Click](examples/redis-in)  |
+| [PostgreSQL](src/postgresql.zig)     |  :red_circle:  | [Click](examples/postgresql) |
+| [MySQL](src/mysql.zig)               |  :red_circle:  |   [Click](examples/mysql)    |
+| [SQLite](src/sqlite.zig)             | :green_circle: |   [Click](examples/sqlite)   |
+| [Config](src/config.zig#L23)         | :green_circle: |   [Click](examples/config)   |
+| [KVS](src/kvs.zig)                   |  :red_circle:  |    [Click](examples/kvs)     |
+| [LLM](src/llm.zig)                   |  :red_circle:  |    [Click](examples/llm)     |
 
 ### :arrow_down: Dependencies
 

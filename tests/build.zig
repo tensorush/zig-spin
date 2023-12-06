@@ -7,13 +7,13 @@ pub fn build(b: *std.Build) void {
     const spin_mod = spin_dep.module("spin");
 
     // Executable
-    const tests_step = b.step("test", "Run tests");
+    const exe_step = b.step("exe", "Run executable");
 
-    const spin_up = b.option(bool, "up", "Run examples") orelse false;
+    const spin_up = b.option(bool, "up", "Run tests") orelse false;
 
     if (spin_up) {
-        const example_run = b.addSystemCommand(&.{ "spin", "build", "--up", "--listen", "localhost:9900" });
-        tests_step.dependOn(&example_run.step);
+        const exe_run = b.addSystemCommand(&.{ "spin", "build", "--up", "--listen", "localhost:9900" });
+        exe_step.dependOn(&exe_run.step);
     } else {
         const exe = b.addExecutable(.{
             .name = "spin-test",
@@ -25,19 +25,8 @@ pub fn build(b: *std.Build) void {
         exe.linkLibrary(spin_art);
 
         const exe_install = b.addInstallArtifact(exe, .{});
-        tests_step.dependOn(&exe_install.step);
+        exe_step.dependOn(&exe_install.step);
     }
 
-    b.default_step.dependOn(tests_step);
-
-    // Lints
-    const lints_step = b.step("lint", "Run lints");
-
-    const lints = b.addFmt(.{
-        .paths = &.{ "src", "build.zig" },
-        .check = true,
-    });
-
-    lints_step.dependOn(&lints.step);
-    b.default_step.dependOn(lints_step);
+    b.default_step.dependOn(exe_step);
 }

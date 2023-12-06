@@ -35,7 +35,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = root_source_file,
         .target = .{ .cpu_arch = .wasm32, .os_tag = .wasi },
         .optimize = .ReleaseSmall,
-        .version = .{ .major = 0, .minor = 5, .patch = 0 },
+        .version = .{ .major = 0, .minor = 6, .patch = 0 },
     });
     lib.addCSourceFiles(.{ .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
     lib.addIncludePath(.{ .path = INC_DIR });
@@ -87,10 +87,10 @@ pub fn build(b: *std.Build) void {
             example.addCSourceFiles(.{ .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
             example.addIncludePath(.{ .path = INC_DIR });
             example.addModule("spin", spin_mod);
+            example.step.dependOn(wit_step);
             example.linkLibC();
 
             const example_install = b.addInstallArtifact(example, .{});
-            example_install.step.dependOn(wit_step);
             examples_step.dependOn(&example_install.step);
         }
     }
@@ -113,9 +113,9 @@ const SRC_DIR = "src/";
 
 const WIT_DIR = "wit/";
 
-const EXAMPLES_DIR = "examples/";
+const INC_DIR = "include/";
 
-const INC_DIR = SRC_DIR ++ "include/";
+const EXAMPLES_DIR = "examples/";
 
 const EXAMPLE_NAMES = &.{
     "http-out",
@@ -124,8 +124,8 @@ const EXAMPLE_NAMES = &.{
     // "kvs",
     // "postgresql",
     // "mysql",
-    // "sqlite",
-    // "config",
+    "sqlite",
+    "config",
     // "llm",
 };
 
@@ -137,7 +137,7 @@ const WIT_NAMES = &.{
     // "key-value",
     // "outbound-pg",
     // "outbound-mysql",
-    // "sqlite",
+    "sqlite",
     "spin-config",
     // "llm",
 };
@@ -150,7 +150,7 @@ const WIT_IS_IMPORTS = &[WIT_NAMES.len]bool{
     // true,
     // true,
     // true,
-    // true,
+    true,
     true,
     // true,
 };
@@ -159,7 +159,7 @@ const WIT_C_FILES = &[WIT_NAMES.len][]const u8{
     INC_DIR ++ WIT_NAMES[0] ++ ".c",
     INC_DIR ++ WIT_NAMES[1] ++ ".c",
     INC_DIR ++ WIT_NAMES[2] ++ ".c",
-    // INC_DIR ++ WIT_NAMES[3] ++ ".c",
+    INC_DIR ++ WIT_NAMES[3] ++ ".c",
     // INC_DIR ++ WIT_NAMES[4] ++ ".c",
     // INC_DIR ++ WIT_NAMES[5] ++ ".c",
     // INC_DIR ++ WIT_NAMES[6] ++ ".c",
@@ -172,7 +172,7 @@ const WIT_C_HEADERS = &[WIT_NAMES.len][]const u8{
     INC_DIR ++ WIT_NAMES[0] ++ ".h",
     INC_DIR ++ WIT_NAMES[1] ++ ".h",
     INC_DIR ++ WIT_NAMES[2] ++ ".h",
-    // INC_DIR ++ WIT_NAMES[3] ++ ".h",
+    INC_DIR ++ WIT_NAMES[3] ++ ".h",
     // INC_DIR ++ WIT_NAMES[4] ++ ".h",
     // INC_DIR ++ WIT_NAMES[5] ++ ".h",
     // INC_DIR ++ WIT_NAMES[6] ++ ".h",

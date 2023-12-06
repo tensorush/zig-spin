@@ -28,7 +28,7 @@ pub const RAW_COMPONENT_ROOT = "spin-raw-component-route";
 const ERROR_TAGS = std.meta.tags(Error);
 
 /// HTTP component's error set.
-/// Value order is maintained for integer casting.
+/// Order is preserved for integer casting.
 pub const Error = error{
     Unused,
     UnallowedDestination,
@@ -56,7 +56,7 @@ pub const Response = struct {
 };
 
 /// Supported HTTP methods.
-/// Value order is maintained for integer casting.
+/// Order is preserved for integer casting.
 pub const Method = enum {
     GET,
     POST,

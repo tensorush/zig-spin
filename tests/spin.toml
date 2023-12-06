@@ -3,14 +3,20 @@ version = "1.0.0"
 spin_manifest_version = "1"
 trigger = { type = "http", base = "/" }
 authors = ["Jora Troosh <tensorush@gmail.com>"]
-description = "Example application that serves an inbound HTTP request."
+description = "Example application that reads a config message."
+
+[variables]
+object = { default = "test codebase" }
 
 [[component]]
 id = "spin-test"
 source = "zig-out/bin/spin-test.wasm"
 
 [component.build]
-command = "zig build test"
+command = "zig build exe"
+
+[component.config]
+message = "All your {{object}} are belong to us"
 
 [component.trigger]
 route = "/..."
