@@ -43,7 +43,7 @@
     ```zig
     const spin = b.dependency("spin", .{});
     exe.addModule("spin", spin.module("spin"));
-    exe.linkLibrary(spin_dep.artifact("spin"));
+    exe.linkLibrary(spin.artifact("spin"));
     ```
 
     </details>
