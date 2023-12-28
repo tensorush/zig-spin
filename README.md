@@ -9,7 +9,7 @@
 
 ### :rocket: Usage
 
-> #### [**WIP**! Haven't yet figured out a way to correctly package the library with the Zig package manager.](tests/)
+> #### [**WIP**! Haven't yet figured out a way to correctly package the library with the Zig package manager.](test/)
 
 1. Add `spin` as a dependency in your `build.zig.zon`.
 
