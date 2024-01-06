@@ -1,10 +1,12 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
-    const root_source_file = std.Build.FileSource.relative(SRC_DIR ++ "spin.zig");
+    const target = b.resolveTargetQuery(.{ .cpu_arch = .wasm32, .os_tag = .wasi });
+    const root_source_file = std.Build.LazyPath.relative(SRC_DIR ++ "spin.zig");
+    const optimize = .ReleaseSmall;
 
     // Module
-    const spin_mod = b.addModule("spin", .{ .source_file = root_source_file });
+    const spin_mod = b.addModule("spin", .{ .root_source_file = root_source_file });
 
     // WIT C bindings
     const wit_step = b.step("wit", "Generate WIT C bindings for guest modules");
@@ -33,8 +35,8 @@ pub fn build(b: *std.Build) void {
     const lib = b.addStaticLibrary(.{
         .name = "spin",
         .root_source_file = root_source_file,
-        .target = .{ .cpu_arch = .wasm32, .os_tag = .wasi },
-        .optimize = .ReleaseSmall,
+        .target = target,
+        .optimize = optimize,
         .version = .{ .major = 0, .minor = 6, .patch = 1 },
     });
     lib.addCSourceFiles(.{ .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
@@ -80,13 +82,13 @@ pub fn build(b: *std.Build) void {
         inline for (EXAMPLE_NAMES) |EXAMPLE_NAME| {
             const example = b.addExecutable(.{
                 .name = EXAMPLE_NAME,
-                .root_source_file = std.Build.FileSource.relative(EXAMPLES_DIR ++ EXAMPLE_NAME ++ "/main.zig"),
-                .target = .{ .cpu_arch = .wasm32, .os_tag = .wasi },
-                .optimize = .ReleaseSmall,
+                .root_source_file = std.Build.LazyPath.relative(EXAMPLES_DIR ++ EXAMPLE_NAME ++ "/main.zig"),
+                .target = target,
+                .optimize = optimize,
             });
             example.addCSourceFiles(.{ .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
             example.addIncludePath(.{ .path = INC_DIR });
-            example.addModule("spin", spin_mod);
+            example.root_module.addImport("spin", spin_mod);
             example.step.dependOn(wit_step);
             example.linkLibC();
 
