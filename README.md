@@ -50,7 +50,7 @@
 
 ### :battery: Progress
 
-Legend: :green_circle: - tested, :yellow_circle: - untested, :red_circle: - unimplemented.
+> Legend: :green_circle: - tested, :yellow_circle: - untested, :red_circle: - unimplemented.
 
 | Component                            |     Status      |           Example            |
 |--------------------------------------|:---------------:|:----------------------------:|
