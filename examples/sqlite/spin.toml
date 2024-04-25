@@ -4,13 +4,14 @@ spin_manifest_version = 2
 name = "sqlite"
 version = "1.0.0"
 authors = ["Jora Troosh <tensorush@gmail.com>"]
-description = "Example application that reads a SQLite message."
+description = "Example application that reads an SQLite message."
 
 [[trigger.http]]
 route = "/..."
 component = "sqlite"
 
 [component.sqlite]
+sqlite_databases = ["default"]
 source = "../../zig-out/bin/sqlite.wasm"
 
 [component.sqlite.build]

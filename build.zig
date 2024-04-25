@@ -9,9 +9,12 @@ pub fn build(b: *std.Build) void {
     // Module
     const spin_mod = b.addModule("spin", .{
         .target = target,
+        .link_libc = true,
         .optimize = optimize,
         .root_source_file = root_source_file,
     });
+    spin_mod.addCSourceFiles(.{ .root = b.path(INC_DIR), .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
+    spin_mod.addIncludePath(b.path(INC_DIR));
 
     // WIT C bindings
     const wit_step = b.step("wit", "Generate WIT C bindings");
@@ -78,10 +81,7 @@ pub fn build(b: *std.Build) void {
                 .optimize = optimize,
                 .root_source_file = b.path(EXAMPLES_DIR ++ EXAMPLE_NAME ++ "/main.zig"),
             });
-            example.addCSourceFiles(.{ .root = b.path(INC_DIR), .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
             example.root_module.addImport("spin", spin_mod);
-            example.addIncludePath(b.path(INC_DIR));
-            example.linkLibC();
 
             const example_install = b.addInstallArtifact(example, .{});
             examples_step.dependOn(&example_install.step);

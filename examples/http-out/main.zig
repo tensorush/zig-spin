@@ -1,53 +1,52 @@
 const std = @import("std");
 const spin = @import("spin");
 
-const BODY_CAP: u8 = 1 << 7;
-
 fn handler(req: spin.http.Request) spin.http.Response {
-    var headers = std.http.Headers.init(std.heap.wasm_allocator);
-    headers.append("Content-Type", "text/plain") catch unreachable;
+    var headers = spin.http.Headers{};
+    headers.append(std.heap.c_allocator, .{ .name = "Content-Type", .value = "text/plain" }) catch @panic("OOM");
 
-    var body = std.ArrayListUnmanaged(u8).initCapacity(std.heap.wasm_allocator, BODY_CAP) catch unreachable;
-    var buf_writer = std.io.bufferedWriter(body.writer(std.heap.wasm_allocator));
-    const writer = buf_writer.writer();
+    var body = spin.http.Body{};
+    var body_buf_writer = std.io.bufferedWriter(body.writer(std.heap.c_allocator));
+    const body_writer = body_buf_writer.writer();
 
-    const req1 = spin.http.Request{ .method = .GET, .url = "https://random-data-api.fermyon.app/animals/json" };
+    const req1 = spin.http.Request{ .uri = "https://random-data-api.fermyon.app/animals/json" };
     const res1 = spin.http.send(req1) catch |err| {
-        writer.print("Error: {s}\n", .{@errorName(err)}) catch unreachable;
-        buf_writer.flush() catch unreachable;
+        body_writer.print("Error: {s}\n", .{@errorName(err)}) catch @panic("OOM");
+        body_buf_writer.flush() catch @panic("OOM");
         return .{ .headers = headers, .body = body, .status = .internal_server_error };
     };
 
-    writer.print("Request 1:\n  URL: {s}\n  Content-Type: {s}\n  Body: {s}\n\n", .{ req1.url, res1.headers.getFirstValue("content-type").?, res1.body.items }) catch unreachable;
+    body_writer.print("== REQUEST 1 ==\n  URI: {s}\n  Content-Type: {s}\n  Body: {s}\n", .{ req1.uri, res1.headers.items[0].value, res1.body.items }) catch @panic("OOM");
 
-    const req2 = spin.http.Request{ .method = .POST, .url = "https://postman-echo.com/post", .headers = headers, .body = req.body };
+    const req2 = spin.http.Request{ .method = .POST, .uri = "https://postman-echo.com/post", .headers = headers, .body = req.body };
     const res2 = spin.http.send(req2) catch |err| {
-        writer.print("Error: {s}\n", .{@errorName(err)}) catch unreachable;
-        buf_writer.flush() catch unreachable;
+        body_writer.print("Error: {s}\n", .{@errorName(err)}) catch @panic("OOM");
+        body_buf_writer.flush() catch @panic("OOM");
         return .{ .headers = headers, .body = body, .status = .internal_server_error };
     };
 
-    writer.print("Request 2:\n  URL: {s}\n  Content-Type: {s}\n  Body: {s}\n\n", .{ req2.url, res2.headers.getFirstValue("content-type").?, res2.body.items }) catch unreachable;
+    body_writer.print("== REQUEST 2 ==\n  URI: {s}\n  Content-Type: {s}\n  Body: {s}\n", .{ req2.uri, res2.headers.items[0].value, res2.body.items }) catch @panic("OOM");
 
-    headers.append("foo", "bar") catch unreachable;
-    var req3_body = std.ArrayListUnmanaged(u8).initCapacity(std.heap.wasm_allocator, BODY_CAP) catch unreachable;
-    req3_body.appendSliceAssumeCapacity("All your codebase are belong to us!\n");
+    headers.append(std.heap.c_allocator, .{ .name = "foo", .value = "bar" }) catch @panic("OOM");
 
-    const req3 = spin.http.Request{ .method = .PUT, .url = "https://postman-echo.com/put", .headers = headers, .body = req3_body };
+    var req3_body = spin.http.Body{};
+    req3_body.appendSlice(std.heap.c_allocator, "All your codebase are belong to us!\n") catch @panic("OOM");
+
+    const req3 = spin.http.Request{ .method = .PUT, .uri = "https://postman-echo.com/put", .headers = headers, .body = req3_body };
     const res3 = spin.http.send(req3) catch |err| {
-        writer.print("Error: {s}\n", .{@errorName(err)}) catch unreachable;
-        buf_writer.flush() catch unreachable;
+        body_writer.print("Error: {s}\n", .{@errorName(err)}) catch @panic("OOM");
+        body_buf_writer.flush() catch @panic("OOM");
         return .{ .headers = headers, .body = body, .status = .internal_server_error };
     };
 
-    writer.print("Request 3:\n  URL: {s}\n  Content-Type: {s}\n  Body: {s}\n\n", .{ req3.url, res3.headers.getFirstValue("content-type").?, res3.body.items }) catch unreachable;
+    body_writer.print("== REQUEST 3 ==\n  URI: {s}\n  Content-Type: {s}\n  Body: {s}\n", .{ req3.uri, res3.headers.items[0].value, res3.body.items }) catch @panic("OOM");
 
-    const req4 = spin.http.Request{ .method = .GET, .url = "https://fermyon.com" };
+    const req4 = spin.http.Request{ .uri = "https://fermyon.com" };
     _ = spin.http.send(req4) catch |err| {
-        writer.print("Request 4:\n  URL: {s}\n  Cannot send HTTP request: {s}\n", .{ req4.url, @errorName(err) }) catch unreachable;
+        body_writer.print("== REQUEST 4 ==\n  URI: {s}\n  Cannot send HTTP request: {s}\n", .{ req4.uri, @errorName(err) }) catch @panic("OOM");
     };
 
-    buf_writer.flush() catch unreachable;
+    body_buf_writer.flush() catch @panic("OOM");
 
     return .{ .body = body, .headers = headers };
 }

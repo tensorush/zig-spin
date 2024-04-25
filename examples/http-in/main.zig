@@ -1,26 +1,24 @@
 const std = @import("std");
 const spin = @import("spin");
 
-const BODY_CAP: u8 = 1 << 7;
-
 fn handler(req: spin.http.Request) spin.http.Response {
-    var headers = std.http.Headers.init(std.heap.wasm_allocator);
-    headers.append("Content-Type", "text/plain") catch unreachable;
-    headers.append("foo", "bar") catch unreachable;
+    var headers = spin.http.Headers{};
+    headers.append(std.heap.c_allocator, .{ .name = "Content-Type", .value = "text/plain" }) catch @panic("OOM");
+    headers.append(std.heap.c_allocator, .{ .name = "foo", .value = "bar" }) catch @panic("OOM");
 
-    var body = std.ArrayListUnmanaged(u8).initCapacity(std.heap.wasm_allocator, BODY_CAP) catch unreachable;
-    var buf_writer = std.io.bufferedWriter(body.writer(std.heap.wasm_allocator));
-    const writer = buf_writer.writer();
+    var body = spin.http.Body{};
+    var body_buf_writer = std.io.bufferedWriter(body.writer(std.heap.c_allocator));
+    const body_writer = body_buf_writer.writer();
 
-    writer.print("== REQUEST ==\nURL: {s}\nMethod:  {}\nHeaders:\n", .{ req.url, req.method }) catch unreachable;
+    body_writer.print("== REQUEST ==\nURI: {s}\nMethod: {s}\nHeaders:\n", .{ req.uri, @tagName(req.method) }) catch @panic("OOM");
 
-    for (req.headers.list.items) |header| {
-        writer.print("  {s}: {s}\n", .{ header.name, header.value }) catch unreachable;
+    for (req.headers.items) |header| {
+        body_writer.print("  {s}: {s}\n", .{ header.name, header.value }) catch @panic("OOM");
     }
 
-    writer.writeAll("== RESPONSE ==\nHello Fermyon!\n") catch unreachable;
+    body_writer.writeAll("== RESPONSE ==\nHello Fermyon!\n") catch @panic("OOM");
 
-    buf_writer.flush() catch unreachable;
+    body_buf_writer.flush() catch @panic("OOM");
 
     return .{ .body = body, .headers = headers };
 }

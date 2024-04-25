@@ -7,25 +7,23 @@ const C = @cImport({
     @cInclude("sqlite.h");
 });
 
-const ERROR_TAGS = std.meta.tags(Error);
-
 /// SQLite component's error set.
-/// Order is preserved for integer casting.
+/// Error value order is preserved for integer casting.
 pub const Error = error{
-    NoDatabase,
+    NoSuchDatabase,
     AccessDenied,
     InvalidConnection,
-    DatabaseIsFull,
-    FailedIoOperation,
-    Unrecognized,
-} || std.mem.Allocator.Error;
+    DatabaseFull,
+    Io,
+};
 
 /// SQLite component's data value types.
-/// Order is preserved for integer casting.
+/// Union tag order is preserved for integer casting.
 pub const Value = union(enum) {
     int: i64,
     real: f64,
-    string: []const u8,
+    text: []const u8,
+    blob: []const u8,
     nil: void,
 };
 
@@ -47,29 +45,29 @@ pub const Database = struct {
         C.sqlite_open(&c_name, &c_conn);
 
         if (c_conn.is_err) {
-            return ERROR_TAGS[c_conn.val.err.tag];
+            return std.meta.tags(Error)[c_conn.val.err.tag];
         }
 
         return .{ .handle = c_conn.val.ok };
     }
 
     /// Close database connection.
-    pub fn close(database: *Database) void {
-        C.sqlite_close(database.handle);
+    pub fn close(self: Database) void {
+        C.sqlite_close(self.handle);
     }
 
-    /// Execute query.
-    pub fn execute(database: *Database, statement: []const u8, args: []const Value) Error!Data {
+    /// Execute query and return data with user-owned columns.
+    pub fn execute(self: Database, statement: []const u8, args: []const Value) Error!Data {
         var c_query_result: C.sqlite_expected_query_result_error_t = undefined;
         defer C.sqlite_expected_query_result_error_free(&c_query_result);
 
         var c_statement = sqliteStr(statement);
-        var params = try toSqliteListValue(args);
+        var c_args = try toSqliteListValue(args);
 
-        C.sqlite_execute(database.handle, &c_statement, &params, &c_query_result);
+        C.sqlite_execute(self.handle, &c_statement, &c_args, &c_query_result);
 
         if (c_query_result.is_err) {
-            return ERROR_TAGS[c_query_result.val.err.tag];
+            return std.meta.tags(Error)[c_query_result.val.err.tag];
         }
 
         return .{
@@ -88,7 +86,7 @@ fn toSqliteListValue(values: []const Value) Error!C.sqlite_list_value_t {
         return .{};
     }
 
-    var c_values = try std.heap.wasm_allocator.alloc(C.sqlite_value_t, values.len);
+    var c_values = std.heap.c_allocator.alloc(C.sqlite_value_t, values.len) catch @panic("OOM");
 
     for (values, 0..) |value, i| {
         c_values[i] = toSqliteValue(value);
@@ -99,21 +97,22 @@ fn toSqliteListValue(values: []const Value) Error!C.sqlite_list_value_t {
 
 fn toSqliteValue(value: Value) C.sqlite_value_t {
     var c_value: C.sqlite_value_t = undefined;
+    c_value.tag = @intFromEnum(value);
 
     switch (value) {
         .int => {
             c_value.val.integer = value.int;
-            c_value.tag = @intFromEnum(Value.int);
         },
         .real => {
             c_value.val.real = value.real;
-            c_value.tag = @intFromEnum(Value.real);
         },
-        .string => {
-            c_value.val.text = sqliteStr(value.string);
-            c_value.tag = @intFromEnum(Value.string);
+        .text => {
+            c_value.val.text = sqliteStr(value.text);
         },
-        .nil => c_value.tag = @intFromEnum(Value.nil),
+        .blob => {
+            c_value.val.blob = .{ .ptr = @constCast(value.blob.ptr), .len = value.blob.len };
+        },
+        .nil => {},
     }
 
     return c_value;
@@ -124,13 +123,12 @@ fn fromSqliteListString(c_list_string: C.sqlite_list_string_t) Error![][]const u
     c_list_string_slice.ptr = c_list_string.ptr;
     c_list_string_slice.len = c_list_string.len;
     var list_string: [][]const u8 = undefined;
-
     var string: []u8 = undefined;
 
     for (c_list_string_slice, 0..) |c_string, i| {
         string.ptr = c_string.ptr;
         string.len = c_string.len;
-        list_string[i] = try std.heap.wasm_allocator.dupe(u8, string);
+        list_string[i] = std.heap.c_allocator.dupe(u8, string) catch @panic("OOM");
     }
 
     return list_string;
@@ -163,21 +161,21 @@ fn fromSqliteListValue(c_list_value: C.sqlite_list_value_t) []Value {
 }
 
 fn fromSqliteValue(c_value: C.sqlite_value_t) Value {
-    return switch (c_value.tag) {
-        0 => .{ .int = c_value.val.integer },
-        1 => .{ .real = c_value.val.real },
-        2 => blk: {
-            var bytes: []u8 = undefined;
-            bytes.ptr = c_value.val.text.ptr;
-            bytes.len = c_value.val.text.len;
-            break :blk .{ .string = bytes };
+    return switch (@as(std.meta.Tag(Value), @enumFromInt(c_value.tag))) {
+        .int => .{ .int = c_value.val.integer },
+        .real => .{ .real = c_value.val.real },
+        .text => blk: {
+            var text: []u8 = undefined;
+            text.ptr = @ptrCast(c_value.val.text.ptr);
+            text.len = c_value.val.text.len;
+            break :blk .{ .text = text };
         },
-        3 => blk: {
-            var bytes: []u8 = undefined;
-            bytes.ptr = c_value.val.blob.ptr;
-            bytes.len = c_value.val.blob.len;
-            break :blk .{ .string = bytes };
+        .blob => blk: {
+            var blob: []u8 = undefined;
+            blob.ptr = c_value.val.blob.ptr;
+            blob.len = c_value.val.blob.len;
+            break :blk .{ .blob = blob };
         },
-        else => .nil,
+        .nil => .nil,
     };
 }
