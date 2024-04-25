@@ -1,15 +1,20 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
-    const target = b.resolveTargetQuery(.{ .cpu_arch = .wasm32, .os_tag = .wasi });
-    const root_source_file = std.Build.LazyPath.relative(SRC_DIR ++ "spin.zig");
     const optimize = .ReleaseSmall;
+    const root_source_file = b.path("src/spin.zig");
+    const version = .{ .major = 0, .minor = 6, .patch = 2 };
+    const target = b.resolveTargetQuery(.{ .cpu_arch = .wasm32, .os_tag = .wasi });
 
     // Module
-    const spin_mod = b.addModule("spin", .{ .root_source_file = root_source_file });
+    const spin_mod = b.addModule("spin", .{
+        .target = target,
+        .optimize = optimize,
+        .root_source_file = root_source_file,
+    });
 
     // WIT C bindings
-    const wit_step = b.step("wit", "Generate WIT C bindings for guest modules");
+    const wit_step = b.step("wit", "Generate WIT C bindings");
 
     inline for (WIT_NAMES, WIT_IS_IMPORTS) |WIT_NAME, WIT_IS_IMPORT| {
         const wit_run = b.addSystemCommand(&.{
@@ -21,59 +26,46 @@ pub fn build(b: *std.Build) void {
         wit_step.dependOn(&wit_run.step);
     }
 
-    const wit_headers_install = b.addWriteFiles();
-
-    inline for (WIT_C_HEADERS) |WIT_C_HEADER| {
-        _ = wit_headers_install.addCopyFileToSource(.{ .path = WIT_C_HEADER }, WIT_C_HEADER);
-    }
-
-    wit_step.dependOn(&wit_headers_install.step);
-
     // Library
     const lib_step = b.step("lib", "Install library");
 
     const lib = b.addStaticLibrary(.{
         .name = "spin",
-        .root_source_file = root_source_file,
         .target = target,
+        .version = version,
         .optimize = optimize,
-        .version = .{ .major = 0, .minor = 6, .patch = 1 },
+        .root_source_file = root_source_file,
     });
-    lib.addCSourceFiles(.{ .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
-    lib.addIncludePath(.{ .path = INC_DIR });
-    lib.step.dependOn(wit_step);
+    lib.addCSourceFiles(.{ .root = b.path(INC_DIR), .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
+    lib.addIncludePath(b.path(INC_DIR));
     lib.linkLibC();
 
-    for (WIT_C_HEADERS) |WIT_C_HEADER| {
-        lib.installHeader(WIT_C_HEADER, std.fs.path.basename(WIT_C_HEADER));
-    }
-
-    b.installArtifact(lib);
-    lib_step.dependOn(&lib.step);
+    const lib_install = b.addInstallArtifact(lib, .{});
+    lib_step.dependOn(&lib_install.step);
     b.default_step.dependOn(lib_step);
 
-    // Docs
-    const docs_step = b.step("docs", "Emit docs");
+    // Documentation
+    const doc_step = b.step("doc", "Emit documentation");
 
-    const docs_install = b.addInstallDirectory(.{
+    const doc_install = b.addInstallDirectory(.{
         .source_dir = lib.getEmittedDocs(),
+        .install_subdir = "doc",
         .install_dir = .prefix,
-        .install_subdir = "docs",
     });
 
-    docs_step.dependOn(&docs_install.step);
-    b.default_step.dependOn(docs_step);
+    doc_step.dependOn(&doc_install.step);
+    b.default_step.dependOn(doc_step);
 
-    // Examples
-    const examples_step = b.step("example", "Install examples");
+    // Example suite
+    const examples_step = b.step("example", "Install example suite");
 
-    const spin_up = b.option(bool, "up", "Run examples") orelse false;
+    const are_examples_up = b.option(bool, "up", "Run example suite") orelse false;
 
-    if (spin_up) {
-        var port = [_]u8{ '9', '0', '0', '0' };
+    if (are_examples_up) {
+        var port = [4]u8{ '9', '0', '0', '0' };
         inline for (EXAMPLE_NAMES) |EXAMPLE_NAME| {
             const example_run = b.addSystemCommand(&.{ "spin", "build", "--up", "--listen", "localhost:" ++ port });
-            example_run.setCwd(.{ .path = EXAMPLES_DIR ++ EXAMPLE_NAME });
+            example_run.setCwd(b.path(EXAMPLES_DIR ++ EXAMPLE_NAME));
             port[3] += 1;
 
             examples_step.dependOn(&example_run.step);
@@ -82,14 +74,13 @@ pub fn build(b: *std.Build) void {
         inline for (EXAMPLE_NAMES) |EXAMPLE_NAME| {
             const example = b.addExecutable(.{
                 .name = EXAMPLE_NAME,
-                .root_source_file = std.Build.LazyPath.relative(EXAMPLES_DIR ++ EXAMPLE_NAME ++ "/main.zig"),
                 .target = target,
                 .optimize = optimize,
+                .root_source_file = b.path(EXAMPLES_DIR ++ EXAMPLE_NAME ++ "/main.zig"),
             });
-            example.addCSourceFiles(.{ .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
-            example.addIncludePath(.{ .path = INC_DIR });
+            example.addCSourceFiles(.{ .root = b.path(INC_DIR), .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
             example.root_module.addImport("spin", spin_mod);
-            example.step.dependOn(wit_step);
+            example.addIncludePath(b.path(INC_DIR));
             example.linkLibC();
 
             const example_install = b.addInstallArtifact(example, .{});
@@ -99,24 +90,20 @@ pub fn build(b: *std.Build) void {
 
     b.default_step.dependOn(examples_step);
 
-    // Lints
-    const lints_step = b.step("lint", "Run lints");
+    // Formatting checks
+    const fmt_step = b.step("fmt", "Run formatting checks");
 
-    const lints = b.addFmt(.{
-        .paths = &.{ EXAMPLES_DIR, SRC_DIR, "build.zig" },
+    const fmt = b.addFmt(.{
+        .paths = &.{ "src/", "examples/", "build.zig", EXAMPLES_DIR },
         .check = true,
     });
 
-    lints_step.dependOn(&lints.step);
-    b.default_step.dependOn(lints_step);
+    fmt_step.dependOn(&fmt.step);
+    b.default_step.dependOn(fmt_step);
 }
 
-const SRC_DIR = "src/";
-
 const WIT_DIR = "wit/";
-
-const INC_DIR = "include/";
-
+const INC_DIR = "src/include/";
 const EXAMPLES_DIR = "examples/";
 
 const EXAMPLE_NAMES = &.{
@@ -158,29 +145,16 @@ const WIT_IS_IMPORTS = &[WIT_NAMES.len]bool{
 };
 
 const WIT_C_FILES = &[WIT_NAMES.len][]const u8{
-    INC_DIR ++ WIT_NAMES[0] ++ ".c",
-    INC_DIR ++ WIT_NAMES[1] ++ ".c",
-    INC_DIR ++ WIT_NAMES[2] ++ ".c",
-    INC_DIR ++ WIT_NAMES[3] ++ ".c",
-    // INC_DIR ++ WIT_NAMES[4] ++ ".c",
-    // INC_DIR ++ WIT_NAMES[5] ++ ".c",
-    // INC_DIR ++ WIT_NAMES[6] ++ ".c",
-    // INC_DIR ++ WIT_NAMES[7] ++ ".c",
-    // INC_DIR ++ WIT_NAMES[8] ++ ".c",
-    // INC_DIR ++ WIT_NAMES[9] ++ ".c",
-};
-
-const WIT_C_HEADERS = &[WIT_NAMES.len][]const u8{
-    INC_DIR ++ WIT_NAMES[0] ++ ".h",
-    INC_DIR ++ WIT_NAMES[1] ++ ".h",
-    INC_DIR ++ WIT_NAMES[2] ++ ".h",
-    INC_DIR ++ WIT_NAMES[3] ++ ".h",
-    // INC_DIR ++ WIT_NAMES[4] ++ ".h",
-    // INC_DIR ++ WIT_NAMES[5] ++ ".h",
-    // INC_DIR ++ WIT_NAMES[6] ++ ".h",
-    // INC_DIR ++ WIT_NAMES[7] ++ ".h",
-    // INC_DIR ++ WIT_NAMES[8] ++ ".h",
-    // INC_DIR ++ WIT_NAMES[9] ++ ".h",
+    WIT_NAMES[0] ++ ".c",
+    WIT_NAMES[1] ++ ".c",
+    WIT_NAMES[2] ++ ".c",
+    WIT_NAMES[3] ++ ".c",
+    // WIT_NAMES[4] ++ ".c",
+    // WIT_NAMES[5] ++ ".c",
+    // WIT_NAMES[6] ++ ".c",
+    // WIT_NAMES[7] ++ ".c",
+    // WIT_NAMES[8] ++ ".c",
+    // WIT_NAMES[9] ++ ".c",
 };
 
 const WIT_C_FLAGS = &.{

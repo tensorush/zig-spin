@@ -12,12 +12,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  example:
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Zig
         uses: goto-bus-stop/setup-zig@v2
@@ -25,24 +25,21 @@ jobs:
       - name: Set up Spin
         uses: fermyon/actions/spin/setup@v1
 
-      - name: Install wit-bindgen-cli
-        run: cargo install --git https://github.com/bytecodealliance/wit-bindgen --rev cb871cf wit-bindgen-cli
-
-      - name: Run examples
+      - name: Run `example`
         run: |
           zig env
           zig build example -Dup > /dev/null 2>&1 &
           sleep 10
 
-  lint:
+  fmt:
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Zig
         uses: goto-bus-stop/setup-zig@v2
 
-      - name: Run lints
-        run: zig build lint
+      - name: Run `fmt`
+        run: zig build fmt

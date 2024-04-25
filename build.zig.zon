@@ -1,5 +1,13 @@
 .{
     .name = "spin",
-    .version = "0.6.1",
-    .paths = .{""},
+    .version = "0.6.2",
+    .paths = .{
+        "src/",
+        "include/",
+        "examples/",
+        "build.zig",
+        "README.md",
+        "LICENSE.md",
+        "build.zig.zon",
+    },
 }

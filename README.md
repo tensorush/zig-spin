@@ -1,15 +1,13 @@
-## :lizard: :yo_yo: **zig spin**
+# :lizard: :yo_yo: zig spin
 
-[![CI][ci-shield]][ci-url]
-[![CD][cd-shield]][cd-url]
-[![DC][docs-shield]][docs-url]
-[![LC][license-shield]][license-url]
+[![CI][ci-shd]][ci-url]
+[![CD][cd-shd]][cd-url]
+[![DC][dc-shd]][dc-url]
+[![LC][lc-shd]][lc-url]
 
-### Zig SDK for the [Spin](https://github.com/fermyon/spin) serverless application framework created by the [Fermyon team](https://www.fermyon.com/).
+## Zig SDK for the [Spin serverless application framework](https://github.com/fermyon/spin) created by the [Fermyon team](https://www.fermyon.com/).
 
 ### :rocket: Usage
-
-> #### [**WIP**! Haven't yet figured out a way to correctly package the library with the Zig package manager.](test/)
 
 1. Add `spin` as a dependency in your `build.zig.zon`.
 
@@ -27,10 +25,17 @@
                 .hash = "<package_hash>",
             },
         },
+        .paths = .{
+            "src/",
+            "build.zig",
+            "README.md",
+            "LICENSE.md",
+            "build.zig.zon",
+        },
     }
     ```
 
-    Set `<package_hash>` to `12200000000000000000000000000000000000000000000000000000000000000000`, and Zig will provide the correct found value in an error message.
+    Set `<package_hash>` to `12200000000000000000000000000000000000000000000000000000000000000000` and build your package to find the correct value specified in a compiler error message.
 
     </details>
 
@@ -41,9 +46,9 @@
     <summary><code>build.zig</code> example</summary>
 
     ```zig
-    const spin = b.dependency("spin", .{});
-    exe.addModule("spin", spin.module("spin"));
-    exe.linkLibrary(spin.artifact("spin"));
+    const spin_dep = b.dependency("spin", .{});
+    const spin_mod = spin.module("spin");
+    exe.root_module.addImport("spin", spin_mod);
     ```
 
     </details>
@@ -67,19 +72,19 @@
 
 ### :arrow_down: Dependencies
 
-- [`wit-bindgen-cli v0.2.0` - guest language WIT bindings generator](https://github.com/bytecodealliance/wit-bindgen/releases/tag/v0.2.0).
+- [`wit-bindgen-cli` - guest language WIT bindings generator](https://github.com/fermyon/wit-bindgen-backport).
 
     ```sh
-    cargo install --git https://github.com/bytecodealliance/wit-bindgen --rev cb871cf wit-bindgen-cli
+    cargo install --git https://github.com/fermyon/wit-bindgen-backport --rev b89d507 wit-bindgen-cli
     ```
 
 <!-- MARKDOWN LINKS -->
 
-[ci-shield]: https://img.shields.io/github/actions/workflow/status/tensorush/zig-spin/ci.yaml?branch=main&style=for-the-badge&logo=github&label=CI&labelColor=black
+[ci-shd]: https://img.shields.io/github/actions/workflow/status/tensorush/zig-spin/ci.yaml?branch=main&style=for-the-badge&logo=github&label=CI&labelColor=black
 [ci-url]: https://github.com/tensorush/zig-spin/blob/main/.github/workflows/ci.yaml
-[cd-shield]: https://img.shields.io/github/actions/workflow/status/tensorush/zig-spin/cd.yaml?branch=main&style=for-the-badge&logo=github&label=CD&labelColor=black
+[cd-shd]: https://img.shields.io/github/actions/workflow/status/tensorush/zig-spin/cd.yaml?branch=main&style=for-the-badge&logo=github&label=CD&labelColor=black
 [cd-url]: https://github.com/tensorush/zig-spin/blob/main/.github/workflows/cd.yaml
-[docs-shield]: https://img.shields.io/badge/click-F6A516?style=for-the-badge&logo=zig&logoColor=F6A516&label=docs&labelColor=black
-[docs-url]: https://tensorush.github.io/zig-spin
-[license-shield]: https://img.shields.io/github/license/tensorush/zig-spin.svg?style=for-the-badge&labelColor=black
-[license-url]: https://github.com/tensorush/zig-spin/blob/main/LICENSE.md
+[dc-shd]: https://img.shields.io/badge/click-F6A516?style=for-the-badge&logo=zig&logoColor=F6A516&label=doc&labelColor=black
+[dc-url]: https://tensorush.github.io/zig-spin
+[lc-shd]: https://img.shields.io/github/license/tensorush/zig-spin.svg?style=for-the-badge&labelColor=black
+[lc-url]: https://github.com/tensorush/zig-spin/blob/main/LICENSE.md
