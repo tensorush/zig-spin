@@ -3,7 +3,7 @@ const std = @import("std");
 pub fn build(b: *std.Build) void {
     const optimize = .ReleaseSmall;
     const root_source_file = b.path("src/spin.zig");
-    const version = .{ .major = 0, .minor = 6, .patch = 2 };
+    const version = .{ .major = 0, .minor = 7, .patch = 0 };
     const target = b.resolveTargetQuery(.{ .cpu_arch = .wasm32, .os_tag = .wasi });
 
     // Module
