@@ -1,0 +1,14 @@
+.{
+    .name = "spin-test",
+    .version = "0.1.0",
+    .dependencies = .{
+        .spin = .{
+            .path = "../",
+        },
+    },
+    .paths = .{
+        "src/",
+        "build.zig",
+        "build.zig.zon",
+    },
+}

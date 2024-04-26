@@ -94,7 +94,7 @@ pub fn build(b: *std.Build) void {
     const fmt_step = b.step("fmt", "Run formatting checks");
 
     const fmt = b.addFmt(.{
-        .paths = &.{ "src/", "examples/", "build.zig", EXAMPLES_DIR },
+        .paths = &.{ "src/", "test/", "examples/", "build.zig", EXAMPLES_DIR },
         .check = true,
     });
 
