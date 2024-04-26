@@ -1,0 +1,19 @@
+spin_manifest_version = 2
+
+[application]
+name = "kvs"
+version = "1.0.0"
+authors = ["Jora Troosh <tensorush@gmail.com>"]
+description = "Example application that interacts with a key-value store."
+
+[[trigger.http]]
+route = "/..."
+component = "kvs"
+
+[component.kvs]
+key_value_stores = ["default"]
+source = "../../zig-out/bin/kvs.wasm"
+
+[component.kvs.build]
+workdir = "../../"
+command = "zig build example"

@@ -110,12 +110,11 @@ const EXAMPLE_NAMES = &.{
     "http-out",
     "http-in",
     // "redis",
-    // "kvs",
+    "kvs",
     // "postgresql",
     // "mysql",
     "sqlite",
     "config",
-    // "llm",
 };
 
 const WIT_NAMES = &.{
@@ -123,12 +122,11 @@ const WIT_NAMES = &.{
     "spin-http",
     // "outbound-redis",
     // "spin-redis",
-    // "key-value",
+    "key-value",
     // "outbound-pg",
     // "outbound-mysql",
     "sqlite",
     "spin-config",
-    // "llm",
 };
 
 const WIT_IS_IMPORTS = &[WIT_NAMES.len]bool{
@@ -136,12 +134,11 @@ const WIT_IS_IMPORTS = &[WIT_NAMES.len]bool{
     false,
     // false,
     // true,
-    // true,
+    true,
     // true,
     // true,
     true,
     true,
-    // true,
 };
 
 const WIT_C_FILES = &[WIT_NAMES.len][]const u8{
@@ -149,12 +146,11 @@ const WIT_C_FILES = &[WIT_NAMES.len][]const u8{
     WIT_NAMES[1] ++ ".c",
     WIT_NAMES[2] ++ ".c",
     WIT_NAMES[3] ++ ".c",
-    // WIT_NAMES[4] ++ ".c",
+    WIT_NAMES[4] ++ ".c",
     // WIT_NAMES[5] ++ ".c",
     // WIT_NAMES[6] ++ ".c",
     // WIT_NAMES[7] ++ ".c",
     // WIT_NAMES[8] ++ ".c",
-    // WIT_NAMES[9] ++ ".c",
 };
 
 const WIT_C_FLAGS = &.{

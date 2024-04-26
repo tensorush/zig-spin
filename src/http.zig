@@ -9,21 +9,21 @@ const C = @cImport({
 });
 
 /// Full URL of the request, including full host and scheme information.
-pub const FULL_URL = "spin-full-url";
+pub const FULL_URL_HEADER = "spin-full-url";
 /// Application base path.
-pub const BASE_PATH = "spin-base-path";
+pub const BASE_PATH_HEADER = "spin-base-path";
 /// Request path relative to the component route, including any base.
-pub const PATH_INFO = "spin-path-info";
+pub const PATH_INFO_HEADER = "spin-path-info";
 /// Client address for the request.
-pub const CLIENT_ADDR = "spin-client-addr";
+pub const CLIENT_ADDR_HEADER = "spin-client-addr";
 /// Route-matched part of the request path,
 /// including the base and wildcard indicator if present.
-pub const MATCHED_ROUTE = "spin-matched-route";
+pub const MATCHED_ROUTE_HEADER = "spin-matched-route";
 /// Component route pattern matched, excluding any wildcard indicator.
-pub const COMPONENT_ROOT = "spin-component-route";
+pub const COMPONENT_ROOT_HEADER = "spin-component-route";
 /// Component route pattern matched, as defined in the component manifest,
 /// excluding the base, but including the wildcard indicator if present.
-pub const RAW_COMPONENT_ROOT = "spin-raw-component-route";
+pub const RAW_COMPONENT_ROOT_HEADER = "spin-raw-component-route";
 
 /// User's handler function for the inbound HTTP request trigger.
 pub var HANDLER: *const fn (Request) Response = undefined;
@@ -89,7 +89,7 @@ pub export fn spin_http_handle_http_request(c_req: *C.spin_http_request_t, c_res
     req.headers.ensureTotalCapacity(std.heap.c_allocator, c_req.headers.len) catch @panic("OOM");
     defer req.headers.deinit(std.heap.c_allocator);
 
-    var c_req_headers: []C.spin_http_tuple2_string_string_t = undefined;
+    var c_req_headers: []const C.spin_http_tuple2_string_string_t = undefined;
     c_req_headers.ptr = c_req.headers.ptr;
     c_req_headers.len = c_req.headers.len;
 
@@ -100,7 +100,7 @@ pub export fn spin_http_handle_http_request(c_req: *C.spin_http_request_t, c_res
         header.value.ptr = c_req_header.f1.ptr;
         header.value.len = c_req_header.f1.len;
         req.headers.appendAssumeCapacity(header);
-        if (std.mem.eql(u8, FULL_URL, header.name)) {
+        if (std.mem.eql(u8, FULL_URL_HEADER, header.name)) {
             req.uri = header.value;
         }
     }
@@ -177,7 +177,7 @@ pub fn send(req: Request) Error!Response {
         res.headers.ensureTotalCapacity(std.heap.c_allocator, c_res.headers.val.len + 1) catch @panic("OOM");
         res.headers.appendAssumeCapacity(.{ .name = "Content-Type", .value = "text/plain" });
 
-        var c_res_headers: []C.wasi_outbound_http_tuple2_string_string_t = undefined;
+        var c_res_headers: []const C.wasi_outbound_http_tuple2_string_string_t = undefined;
         c_res_headers.ptr = c_res.headers.val.ptr;
         c_res_headers.len = c_res.headers.val.len;
 

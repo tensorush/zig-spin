@@ -59,15 +59,15 @@
 
 | Component                            |     Status      |           Example            |
 |--------------------------------------|:---------------:|:----------------------------:|
-| [HTTP (outbound)](src/http.zig#L133) | :green_circle:  |  [Click](examples/http-out)  |
-| [HTTP (inbound)](src/http.zig#L71)   | :green_circle:  |  [Click](examples/http-in)   |
+| [HTTP (outbound)](src/http.zig#L139) | :green_circle:  |  [Click](examples/http-out)  |
+| [HTTP (inbound)](src/http.zig#L81)   | :green_circle:  |  [Click](examples/http-in)   |
 | [Redis (outbound)](src/redis.zig)    |  :red_circle:   | [Click](examples/redis-out)  |
 | [Redis (inbound)](src/redis.zig)     |  :red_circle:   |  [Click](examples/redis-in)  |
 | [PostgreSQL](src/postgresql.zig)     |  :red_circle:   | [Click](examples/postgresql) |
 | [MySQL](src/mysql.zig)               |  :red_circle:   |   [Click](examples/mysql)    |
 | [SQLite](src/sqlite.zig)             | :yellow_circle: |   [Click](examples/sqlite)   |
-| [Config](src/config.zig#L23)         | :green_circle:  |   [Click](examples/config)   |
-| [KVS](src/kvs.zig)                   |  :red_circle:   |    [Click](examples/kvs)     |
+| [Config](src/config.zig)             | :green_circle:  |   [Click](examples/config)   |
+| [KVS](src/kvs.zig)                   | :green_circle:  |    [Click](examples/kvs)     |
 | [LLM](src/llm.zig)                   |  :red_circle:   |    [Click](examples/llm)     |
 
 ### :arrow_down: Dependencies

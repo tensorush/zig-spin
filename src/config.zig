@@ -29,7 +29,7 @@ pub fn get(key: []const u8) Error![]const u8 {
         return std.meta.tags(Error)[c_str.val.err.tag];
     }
 
-    var c_str_ok: []u8 = undefined;
+    var c_str_ok: []const u8 = undefined;
     c_str_ok.ptr = c_str.val.ok.ptr;
     c_str_ok.len = c_str.val.ok.len;
 
