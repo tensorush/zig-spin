@@ -15,7 +15,7 @@ pub const Error = error{
     BadParameter,
     QueryFailed,
     ValueConversionFailed,
-    OtherError,
+    Other,
 };
 
 /// PostgreSQL component's data value types.
@@ -103,7 +103,6 @@ fn toPostgresqlArgs(args: []const Value) C.outbound_pg_list_parameter_value_t {
     }
 
     var c_args = std.heap.c_allocator.alloc(C.outbound_pg_parameter_value_t, args.len) catch @panic("OOM");
-
     for (args, 0..) |arg, i| {
         c_args[i] = toPostgresqlArg(arg);
     }

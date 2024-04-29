@@ -67,9 +67,15 @@ pub fn build(b: *std.Build) void {
     if (are_examples_up) {
         var port = [4]u8{ '9', '0', '0', '0' };
         inline for (EXAMPLE_NAMES) |EXAMPLE_NAME| {
-            const example_run = b.addSystemCommand(&.{ "spin", "build", "--up", "--listen", "localhost:" ++ port });
+            const example_run = blk: {
+                if (std.mem.eql(u8, EXAMPLE_NAME, "redis-in")) {
+                    break :blk b.addSystemCommand(&.{ "spin", "build", "--up" });
+                } else {
+                    defer port[3] += 1;
+                    break :blk b.addSystemCommand(&.{ "spin", "build", "--up", "--listen", "localhost:" ++ port });
+                }
+            };
             example_run.setCwd(b.path(EXAMPLES_DIR ++ EXAMPLE_NAME));
-            port[3] += 1;
 
             examples_step.dependOn(&example_run.step);
         }
@@ -114,7 +120,7 @@ const EXAMPLES_DIR = "examples/";
 const EXAMPLE_NAMES = &.{
     "http-out",
     "http-in",
-    // "redis-out",
+    "redis-out",
     // "redis-in",
     "kvs",
     "postgresql",
@@ -126,7 +132,7 @@ const EXAMPLE_NAMES = &.{
 const WIT_NAMES = &.{
     "wasi-outbound-http",
     "spin-http",
-    // "outbound-redis",
+    "outbound-redis",
     // "spin-redis",
     "key-value",
     "outbound-pg",
@@ -138,8 +144,8 @@ const WIT_NAMES = &.{
 const WIT_IS_IMPORTS = &[WIT_NAMES.len]bool{
     true,
     false,
+    true,
     // false,
-    // true,
     true,
     true,
     true,
@@ -155,7 +161,7 @@ const WIT_C_FILES = &[WIT_NAMES.len][]const u8{
     WIT_NAMES[4] ++ ".c",
     WIT_NAMES[5] ++ ".c",
     WIT_NAMES[6] ++ ".c",
-    // WIT_NAMES[7] ++ ".c",
+    WIT_NAMES[7] ++ ".c",
     // WIT_NAMES[8] ++ ".c",
 };
 

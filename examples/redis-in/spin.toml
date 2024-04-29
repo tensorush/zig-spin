@@ -1,0 +1,21 @@
+spin_manifest_version = 2
+
+[application]
+name = "redis-in"
+version = "1.0.0"
+authors = ["Jora Troosh <tensorush@gmail.com>"]
+description = "Example application that accepts an inbound Redis message."
+
+[application.trigger.redis]
+address = "redis://localhost:6379"
+
+[[trigger.redis]]
+channel = "messages"
+component = "redis-in"
+
+[component.redis-in]
+source = "../../zig-out/bin/redis-in.wasm"
+
+[component.redis-in.build]
+workdir = "../../"
+command = "zig build example"

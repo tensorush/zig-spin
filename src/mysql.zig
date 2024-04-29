@@ -15,7 +15,7 @@ pub const Error = error{
     BadParameter,
     QueryFailed,
     ValueConversionFailed,
-    OtherError,
+    Other,
 };
 
 /// MySQL component's data value types.
@@ -101,7 +101,6 @@ fn toMysqlArgs(args: []const Value) C.outbound_mysql_list_parameter_value_t {
     }
 
     var c_args = std.heap.c_allocator.alloc(C.outbound_mysql_parameter_value_t, args.len) catch @panic("OOM");
-
     for (args, 0..) |arg, i| {
         c_args[i] = toMysqlArg(arg);
     }

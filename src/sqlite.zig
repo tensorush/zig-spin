@@ -87,7 +87,6 @@ fn toSqliteArgs(args: []const Value) C.sqlite_list_value_t {
     }
 
     var c_args = std.heap.c_allocator.alloc(C.sqlite_value_t, args.len) catch @panic("OOM");
-
     for (args, 0..) |arg, i| {
         c_args[i] = toSqliteArg(arg);
     }
@@ -100,10 +99,10 @@ fn toSqliteArg(arg: Value) C.sqlite_value_t {
     c_arg.tag = @intFromEnum(arg);
 
     switch (arg) {
-        .int => c_arg.val.integer = arg.int,
-        .real => c_arg.val.real = arg.real,
-        .text => c_arg.val.text = toSqliteString(arg.text),
-        .blob => c_arg.val.blob = .{ .ptr = @constCast(arg.blob.ptr), .len = arg.blob.len },
+        .int => |int| c_arg.val.integer = int,
+        .real => |real| c_arg.val.real = real,
+        .text => |text| c_arg.val.text = toSqliteString(text),
+        .blob => |blob| c_arg.val.blob = .{ .ptr = @constCast(blob.ptr), .len = blob.len },
         .null => {},
     }
 

@@ -1,0 +1,19 @@
+spin_manifest_version = 2
+
+[application]
+name = "redis-out"
+version = "1.0.0"
+authors = ["Jora Troosh <tensorush@gmail.com>"]
+description = "Example application that sends an outbound Redis message."
+
+[[trigger.http]]
+route = "/publish"
+component = "redis-out"
+
+[component.redis-out]
+source = "../../zig-out/bin/redis-out.wasm"
+allowed_outbound_hosts = ["redis://127.0.0.1"]
+
+[component.redis-out.build]
+workdir = "../../"
+command = "zig build example"

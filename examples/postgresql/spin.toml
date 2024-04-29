@@ -4,7 +4,7 @@ spin_manifest_version = 2
 name = "postgresql"
 version = "1.0.0"
 authors = ["Jora Troosh <tensorush@gmail.com>"]
-description = "Example application that executes MySQL queries."
+description = "Example application that executes PostgreSQL queries."
 
 [[trigger.http]]
 route = "/..."
