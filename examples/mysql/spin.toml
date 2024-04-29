@@ -1,0 +1,19 @@
+spin_manifest_version = 2
+
+[application]
+name = "mysql"
+version = "1.0.0"
+authors = ["Jora Troosh <tensorush@gmail.com>"]
+description = "Example application that executes MySQL queries."
+
+[[trigger.http]]
+route = "/..."
+component = "mysql"
+
+[component.mysql]
+source = "../../zig-out/bin/mysql.wasm"
+allowed_outbound_hosts = ["mysql://127.0.0.1"]
+
+[component.mysql.build]
+workdir = "../../"
+command = "zig build example"

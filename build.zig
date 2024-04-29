@@ -94,7 +94,12 @@ pub fn build(b: *std.Build) void {
     const fmt_step = b.step("fmt", "Run formatting checks");
 
     const fmt = b.addFmt(.{
-        .paths = &.{ "src/", "test/", "examples/", "build.zig", EXAMPLES_DIR },
+        .paths = &.{
+            "src/",
+            "test/",
+            "build.zig",
+            EXAMPLES_DIR,
+        },
         .check = true,
     });
 
@@ -109,10 +114,11 @@ const EXAMPLES_DIR = "examples/";
 const EXAMPLE_NAMES = &.{
     "http-out",
     "http-in",
-    // "redis",
+    // "redis-out",
+    // "redis-in",
     "kvs",
-    // "postgresql",
-    // "mysql",
+    "postgresql",
+    "mysql",
     "sqlite",
     "config",
 };
@@ -123,8 +129,8 @@ const WIT_NAMES = &.{
     // "outbound-redis",
     // "spin-redis",
     "key-value",
-    // "outbound-pg",
-    // "outbound-mysql",
+    "outbound-pg",
+    "outbound-mysql",
     "sqlite",
     "spin-config",
 };
@@ -135,8 +141,8 @@ const WIT_IS_IMPORTS = &[WIT_NAMES.len]bool{
     // false,
     // true,
     true,
-    // true,
-    // true,
+    true,
+    true,
     true,
     true,
 };
@@ -147,8 +153,8 @@ const WIT_C_FILES = &[WIT_NAMES.len][]const u8{
     WIT_NAMES[2] ++ ".c",
     WIT_NAMES[3] ++ ".c",
     WIT_NAMES[4] ++ ".c",
-    // WIT_NAMES[5] ++ ".c",
-    // WIT_NAMES[6] ++ ".c",
+    WIT_NAMES[5] ++ ".c",
+    WIT_NAMES[6] ++ ".c",
     // WIT_NAMES[7] ++ ".c",
     // WIT_NAMES[8] ++ ".c",
 };

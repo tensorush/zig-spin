@@ -24,13 +24,13 @@ pub const Value = union(enum) {
     real: f64,
     text: []const u8,
     blob: []const u8,
-    nil: void,
+    null: void,
 };
 
 /// Data as rows and columns.
 pub const Data = struct {
-    cols: []const []const u8,
     rows: []const []const Value,
+    cols: []const []const u8,
 };
 
 /// Database instance with a handle.
@@ -56,13 +56,13 @@ pub const Database = struct {
         C.sqlite_close(self.handle);
     }
 
-    /// Execute query and return data with user-owned columns.
+    /// Execute query and return data with user-owned data rows and columns.
     pub fn execute(self: Database, statement: []const u8, args: []const Value) Error!Data {
         var c_query_result: C.sqlite_expected_query_result_error_t = undefined;
         defer C.sqlite_expected_query_result_error_free(&c_query_result);
 
         var c_statement = toSqliteString(statement);
-        var c_args = toSqliteListValue(args);
+        var c_args = toSqliteArgs(args);
 
         C.sqlite_execute(self.handle, &c_statement, &c_args, &c_query_result);
 
@@ -71,8 +71,8 @@ pub const Database = struct {
         }
 
         return .{
-            .cols = fromSqliteListString(c_query_result.val.ok.columns),
-            .rows = fromSqliteListRowResult(c_query_result.val.ok.rows),
+            .rows = fromSqliteRows(c_query_result.val.ok.rows),
+            .cols = fromSqliteCols(c_query_result.val.ok.columns),
         };
     }
 };
@@ -81,75 +81,75 @@ fn toSqliteString(string: []const u8) C.sqlite_string_t {
     return .{ .ptr = @constCast(@ptrCast(string.ptr)), .len = string.len };
 }
 
-fn toSqliteListValue(values: []const Value) C.sqlite_list_value_t {
-    if (values.len == 0) {
+fn toSqliteArgs(args: []const Value) C.sqlite_list_value_t {
+    if (args.len == 0) {
         return .{};
     }
 
-    var c_values = std.heap.c_allocator.alloc(C.sqlite_value_t, values.len) catch @panic("OOM");
+    var c_args = std.heap.c_allocator.alloc(C.sqlite_value_t, args.len) catch @panic("OOM");
 
-    for (values, 0..) |value, i| {
-        c_values[i] = toSqliteValue(value);
+    for (args, 0..) |arg, i| {
+        c_args[i] = toSqliteArg(arg);
     }
 
-    return .{ .ptr = c_values.ptr, .len = c_values.len };
+    return .{ .ptr = c_args.ptr, .len = c_args.len };
 }
 
-fn toSqliteValue(value: Value) C.sqlite_value_t {
-    var c_value: C.sqlite_value_t = undefined;
-    c_value.tag = @intFromEnum(value);
+fn toSqliteArg(arg: Value) C.sqlite_value_t {
+    var c_arg: C.sqlite_value_t = undefined;
+    c_arg.tag = @intFromEnum(arg);
 
-    switch (value) {
-        .int => c_value.val.integer = value.int,
-        .real => c_value.val.real = value.real,
-        .text => c_value.val.text = toSqliteString(value.text),
-        .blob => c_value.val.blob = .{ .ptr = @constCast(value.blob.ptr), .len = value.blob.len },
-        .nil => {},
+    switch (arg) {
+        .int => c_arg.val.integer = arg.int,
+        .real => c_arg.val.real = arg.real,
+        .text => c_arg.val.text = toSqliteString(arg.text),
+        .blob => c_arg.val.blob = .{ .ptr = @constCast(arg.blob.ptr), .len = arg.blob.len },
+        .null => {},
     }
 
-    return c_value;
+    return c_arg;
 }
 
-fn fromSqliteListString(c_string_list: C.sqlite_list_string_t) []const []const u8 {
-    var string_list = std.heap.c_allocator.alloc([]const u8, c_string_list.len) catch @panic("OOM");
-    var c_string_list_slice: []const C.sqlite_string_t = undefined;
-    c_string_list_slice.ptr = c_string_list.ptr;
-    c_string_list_slice.len = c_string_list.len;
-    var string: []const u8 = undefined;
+fn fromSqliteCols(c_cols: C.sqlite_list_string_t) []const []const u8 {
+    var cols = std.heap.c_allocator.alloc([]const u8, c_cols.len) catch @panic("OOM");
+    var c_cols_slice: []const C.sqlite_string_t = undefined;
+    c_cols_slice.ptr = c_cols.ptr;
+    c_cols_slice.len = c_cols.len;
 
-    for (c_string_list_slice, 0..) |c_string, i| {
-        string.ptr = c_string.ptr;
-        string.len = c_string.len;
-        string_list[i] = std.heap.c_allocator.dupe(u8, string) catch @panic("OOM");
+    var col: []const u8 = undefined;
+    for (c_cols_slice, 0..) |c_col, i| {
+        col.ptr = c_col.ptr;
+        col.len = c_col.len;
+        cols[i] = std.heap.c_allocator.dupe(u8, col) catch @panic("OOM");
     }
 
-    return string_list;
+    return cols;
 }
 
-fn fromSqliteListRowResult(c_list_row_result: C.sqlite_list_row_result_t) []const []const Value {
-    var list_row_result = std.heap.c_allocator.alloc([]const Value, c_list_row_result.len) catch @panic("OOM");
-    var c_list_row_result_slice: []const C.sqlite_row_result_t = undefined;
-    c_list_row_result_slice.ptr = c_list_row_result.ptr;
-    c_list_row_result_slice.len = c_list_row_result.len;
+fn fromSqliteRows(c_rows: C.sqlite_list_row_result_t) []const []const Value {
+    var rows = std.heap.c_allocator.alloc([]const Value, c_rows.len) catch @panic("OOM");
+    var c_rows_slice: []const C.sqlite_row_result_t = undefined;
+    c_rows_slice.ptr = c_rows.ptr;
+    c_rows_slice.len = c_rows.len;
 
-    for (c_list_row_result_slice, 0..) |item, i| {
-        list_row_result[i] = fromSqliteListValue(item.values);
+    for (c_rows_slice, 0..) |c_row, i| {
+        rows[i] = fromSqliteRow(c_row.values);
     }
 
-    return list_row_result;
+    return rows;
 }
 
-fn fromSqliteListValue(c_list_value: C.sqlite_list_value_t) []const Value {
-    var list_value = std.heap.c_allocator.alloc(Value, c_list_value.len) catch @panic("OOM");
-    var c_list_value_slice: []const C.sqlite_value_t = undefined;
-    c_list_value_slice.ptr = c_list_value.ptr;
-    c_list_value_slice.len = c_list_value.len;
+fn fromSqliteRow(c_row: C.sqlite_list_value_t) []const Value {
+    var row = std.heap.c_allocator.alloc(Value, c_row.len) catch @panic("OOM");
+    var c_row_slice: []const C.sqlite_value_t = undefined;
+    c_row_slice.ptr = c_row.ptr;
+    c_row_slice.len = c_row.len;
 
-    for (c_list_value_slice, 0..) |item, i| {
-        list_value[i] = fromSqliteValue(item);
+    for (c_row_slice, 0..) |c_value, i| {
+        row[i] = fromSqliteValue(c_value);
     }
 
-    return list_value;
+    return row;
 }
 
 fn fromSqliteValue(c_value: C.sqlite_value_t) Value {
@@ -168,6 +168,6 @@ fn fromSqliteValue(c_value: C.sqlite_value_t) Value {
             blob.len = c_value.val.blob.len;
             break :blk .{ .blob = std.heap.c_allocator.dupe(u8, blob) catch @panic("OOM") };
         },
-        .nil => .nil,
+        .null => .null,
     };
 }

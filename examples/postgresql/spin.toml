@@ -1,0 +1,19 @@
+spin_manifest_version = 2
+
+[application]
+name = "postgresql"
+version = "1.0.0"
+authors = ["Jora Troosh <tensorush@gmail.com>"]
+description = "Example application that executes MySQL queries."
+
+[[trigger.http]]
+route = "/..."
+component = "postgresql"
+
+[component.postgresql]
+source = "../../zig-out/bin/postgresql.wasm"
+allowed_outbound_hosts = ["postgres://localhost"]
+
+[component.postgresql.build]
+workdir = "../../"
+command = "zig build example"

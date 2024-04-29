@@ -57,7 +57,7 @@
 
 ### :battery: Progress
 
-> Legend: :green_circle: - tested, :yellow_circle: - untested, :red_circle: - unimplemented.
+> #### Legend: :green_circle: - tested, :yellow_circle: - untested, :red_circle: - unimplemented.
 
 | Component                            |     Status      |           Example            |
 |--------------------------------------|:---------------:|:----------------------------:|
@@ -65,10 +65,11 @@
 | [HTTP (inbound)](src/http.zig#L81)   | :green_circle:  |  [Click](examples/http-in)   |
 | [Redis (outbound)](src/redis.zig)    |  :red_circle:   | [Click](examples/redis-out)  |
 | [Redis (inbound)](src/redis.zig)     |  :red_circle:   |  [Click](examples/redis-in)  |
-| [PostgreSQL](src/postgresql.zig)     |  :red_circle:   | [Click](examples/postgresql) |
-| [MySQL](src/mysql.zig)               |  :red_circle:   |   [Click](examples/mysql)    |
+| [PostgreSQL](src/postgresql.zig)     | :yellow_circle: | [Click](examples/postgresql) |
+| [MySQL](src/mysql.zig)               | :yellow_circle: |   [Click](examples/mysql)    |
 | [SQLite](src/sqlite.zig)             | :yellow_circle: |   [Click](examples/sqlite)   |
 | [Config](src/config.zig)             | :green_circle:  |   [Click](examples/config)   |
+| [MQTT](src/mqtt.zig)                 |  :red_circle:   |    [Click](examples/mqtt)    |
 | [KVS](src/kvs.zig)                   | :green_circle:  |    [Click](examples/kvs)     |
 | [LLM](src/llm.zig)                   |  :red_circle:   |    [Click](examples/llm)     |
 

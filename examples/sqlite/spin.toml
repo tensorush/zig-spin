@@ -4,7 +4,7 @@ spin_manifest_version = 2
 name = "sqlite"
 version = "1.0.0"
 authors = ["Jora Troosh <tensorush@gmail.com>"]
-description = "Example application that reads an SQLite message."
+description = "Example application that executes SQLite queries."
 
 [[trigger.http]]
 route = "/..."
