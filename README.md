@@ -59,19 +59,19 @@
 
 > #### Legend: :green_circle: - tested, :yellow_circle: - untested, :red_circle: - unimplemented.
 
-| Component                            |     Status      |           Example            |
-|--------------------------------------|:---------------:|:----------------------------:|
-| [HTTP (outbound)](src/http.zig#L139) | :green_circle:  |  [Click](examples/http-out)  |
-| [HTTP (inbound)](src/http.zig#L81)   | :green_circle:  |  [Click](examples/http-in)   |
-| [Redis (outbound)](src/redis.zig)    | :yellow_circle: | [Click](examples/redis-out)  |
-| [Redis (inbound)](src/redis.zig)     | :yellow_circle: |  [Click](examples/redis-in)  |
-| [Key-value store](src/kvs.zig)       | :green_circle:  |    [Click](examples/kvs)     |
-| [PostgreSQL](src/postgresql.zig)     | :yellow_circle: | [Click](examples/postgresql) |
-| [MySQL](src/mysql.zig)               | :yellow_circle: |   [Click](examples/mysql)    |
-| [SQLite](src/sqlite.zig)             | :yellow_circle: |   [Click](examples/sqlite)   |
-| [Config](src/config.zig)             | :green_circle:  |   [Click](examples/config)   |
-| [MQTT](src/mqtt.zig)                 |  :red_circle:   |    [Click](examples/mqtt)    |
-| [LLM](src/llm.zig)                   |  :red_circle:   |    [Click](examples/llm)     |
+| Component                             |     Status      |           Example            |
+|---------------------------------------|:---------------:|:----------------------------:|
+| [HTTP (outbound)](src/http.zig#L139)  | :green_circle:  |  [Click](examples/http-out)  |
+| [HTTP (inbound)](src/http.zig#L81)    | :green_circle:  |  [Click](examples/http-in)   |
+| [Redis (outbound)](src/redis.zig#L24) | :yellow_circle: | [Click](examples/redis-out)  |
+| [Redis (inbound)](src/redis.zig#L157) | :yellow_circle: |  [Click](examples/redis-in)  |
+| [Key-value store](src/kvs.zig)        | :green_circle:  |    [Click](examples/kvs)     |
+| [PostgreSQL](src/postgresql.zig)      | :yellow_circle: | [Click](examples/postgresql) |
+| [MySQL](src/mysql.zig)                | :yellow_circle: |   [Click](examples/mysql)    |
+| [SQLite](src/sqlite.zig)              | :yellow_circle: |   [Click](examples/sqlite)   |
+| [Config](src/config.zig)              | :green_circle:  |   [Click](examples/config)   |
+| [MQTT](src/mqtt.zig)                  |  :red_circle:   |    [Click](examples/mqtt)    |
+| [LLM](src/llm.zig)                    |  :red_circle:   |    [Click](examples/llm)     |
 
 ### :arrow_down: Dependencies
 
