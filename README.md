@@ -9,6 +9,8 @@
 
 ### :rocket: Usage
 
+> #### See the [package test](test/) for a full usage example.
+
 1. Add `spin` as a dependency in your `build.zig.zon`.
 
     <details>
