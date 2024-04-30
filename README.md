@@ -9,7 +9,12 @@
 
 ### :rocket: Usage
 
-> #### See the [package test](test/) for a full usage example.
+> [!IMPORTANT]
+>
+> - Make sure your executable's optimization mode is `ReleaseSmall` and target is `wasm32-wasi`.
+> - Make sure you use the `std.heap.c_allocator` when freeing memory allocated by this library.
+>
+> See the [package test](test/) for a complete basic usage example.
 
 1. Add `spin` as a dependency in your `build.zig.zon`.
 
@@ -57,7 +62,9 @@
 
 ### :battery: Progress
 
-> #### Legend: :green_circle: - tested, :yellow_circle: - untested, :red_circle: - unimplemented.
+> [!NOTE]
+>
+> Legend: :green_circle: - tested, :yellow_circle: - untested, :red_circle: - unimplemented.
 
 | Component                             |     Status      |           Example            |
 |---------------------------------------|:---------------:|:----------------------------:|
