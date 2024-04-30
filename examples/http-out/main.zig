@@ -2,11 +2,11 @@ const std = @import("std");
 const spin = @import("spin");
 
 fn handler(req: spin.http.Request) spin.http.Response {
-    var headers = spin.http.Headers{};
-    headers.append(std.heap.c_allocator, .{ .name = "Content-Type", .value = "text/plain" }) catch @panic("OOM");
+    var headers = spin.http.Headers.init(std.heap.c_allocator);
+    headers.append(.{ .name = "Content-Type", .value = "text/plain" }) catch @panic("OOM");
 
-    var body = spin.http.Body{};
-    var body_buf_writer = std.io.bufferedWriter(body.writer(std.heap.c_allocator));
+    var body = spin.http.Body.init(std.heap.c_allocator);
+    var body_buf_writer = std.io.bufferedWriter(body.writer());
     const body_writer = body_buf_writer.writer();
 
     const req1 = spin.http.Request{ .uri = "https://random-data-api.fermyon.app/animals/json" };
@@ -27,10 +27,10 @@ fn handler(req: spin.http.Request) spin.http.Response {
 
     body_writer.print("== REQUEST 2 ==\n  URI: {s}\n  Content-Type: {s}\n  Body: {s}\n", .{ req2.uri, res2.headers.items[0].value, res2.body.items }) catch @panic("OOM");
 
-    headers.append(std.heap.c_allocator, .{ .name = "foo", .value = "bar" }) catch @panic("OOM");
+    headers.append(.{ .name = "foo", .value = "bar" }) catch @panic("OOM");
 
-    var req3_body = spin.http.Body{};
-    req3_body.appendSlice(std.heap.c_allocator, "All your codebase are belong to us!\n") catch @panic("OOM");
+    var req3_body = spin.http.Body.init(std.heap.c_allocator);
+    req3_body.appendSlice("All your codebase are belong to us!\n") catch @panic("OOM");
 
     const req3 = spin.http.Request{ .method = .PUT, .uri = "https://postman-echo.com/put", .headers = headers, .body = req3_body };
     const res3 = spin.http.send(req3) catch |err| {

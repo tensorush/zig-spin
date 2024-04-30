@@ -19,19 +19,16 @@ pub const Error = error{
 /// Retrieves the user-owned config value corresponding to the given key for the current component.
 /// The config key must match one defined in the component manifest.
 pub fn get(key: []const u8) Error![]const u8 {
-    var c_key = C.spin_config_string_t{ .ptr = @constCast(@ptrCast(key.ptr)), .len = key.len };
-    var c_str: C.spin_config_expected_string_error_t = undefined;
+    var c_key = C.spin_config_string_t{ .ptr = @constCast(key.ptr), .len = key.len };
+    var c_value = C.spin_config_expected_string_error_t{};
 
-    C.spin_config_get_config(&c_key, &c_str);
-    defer C.spin_config_expected_string_error_free(&c_str);
-
-    if (c_str.is_err) {
-        return std.meta.tags(Error)[c_str.val.err.tag];
+    C.spin_config_get_config(&c_key, &c_value);
+    if (c_value.is_err) {
+        return std.meta.tags(Error)[c_value.val.err.tag];
     }
 
-    var c_str_ok: []const u8 = undefined;
-    c_str_ok.ptr = c_str.val.ok.ptr;
-    c_str_ok.len = c_str.val.ok.len;
-
-    return std.heap.c_allocator.dupe(u8, c_str_ok) catch @panic("OOM");
+    var value: []const u8 = &.{};
+    value.ptr = c_value.val.ok.ptr;
+    value.len = c_value.val.ok.len;
+    return value;
 }

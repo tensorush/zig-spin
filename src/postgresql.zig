@@ -55,15 +55,12 @@ pub const Database = struct {
 
     /// Execute query that doesn't return data, like INSERT or UPDATE.
     pub fn execute(self: Database, statement: []const u8, args: []const Value) Error!u64 {
-        var c_result: C.outbound_pg_expected_u64_pg_error_t = undefined;
-        defer C.outbound_pg_expected_u64_pg_error_free(&c_result);
-
+        var c_result = C.outbound_pg_expected_u64_pg_error_t{};
         var c_address = toPostgresqlString(self.address);
         var c_statement = toPostgresqlString(statement);
         var c_args = toPostgresqlArgs(args);
 
         C.outbound_pg_execute(&c_address, &c_statement, &c_args, &c_result);
-
         if (c_result.is_err) {
             return std.meta.tags(Error)[c_result.val.err.tag];
         }
@@ -73,15 +70,12 @@ pub const Database = struct {
 
     /// Execute query and return data with user-owned data rows and columns.
     pub fn query(self: Database, statement: []const u8, args: []const Value) Error!QueryResult {
-        var c_query_result: C.outbound_pg_expected_row_set_pg_error_t = undefined;
-        defer C.outbound_pg_expected_row_set_pg_error_free(&c_query_result);
-
+        var c_query_result = C.outbound_pg_expected_row_set_pg_error_t{};
         var c_address = toPostgresqlString(self.address);
         var c_statement = toPostgresqlString(statement);
         var c_args = toPostgresqlArgs(args);
 
         C.outbound_pg_query(&c_address, &c_statement, &c_args, &c_query_result);
-
         if (c_query_result.is_err) {
             return std.meta.tags(Error)[c_query_result.val.err.tag];
         }
@@ -94,7 +88,7 @@ pub const Database = struct {
 };
 
 fn toPostgresqlString(string: []const u8) C.outbound_pg_string_t {
-    return .{ .ptr = @constCast(@ptrCast(string.ptr)), .len = string.len };
+    return .{ .ptr = @constCast(string.ptr), .len = string.len };
 }
 
 fn toPostgresqlArgs(args: []const Value) C.outbound_pg_list_parameter_value_t {
@@ -111,7 +105,7 @@ fn toPostgresqlArgs(args: []const Value) C.outbound_pg_list_parameter_value_t {
 }
 
 fn toPostgresqlArg(arg: Value) C.outbound_pg_parameter_value_t {
-    var c_arg: C.outbound_pg_parameter_value_t = undefined;
+    var c_arg = C.outbound_pg_parameter_value_t{};
     c_arg.tag = @intFromEnum(arg);
 
     switch (arg) {
@@ -136,16 +130,14 @@ fn toPostgresqlArg(arg: Value) C.outbound_pg_parameter_value_t {
 
 fn fromPostgresqlCols(c_cols: C.outbound_pg_list_column_t) []const Column {
     var cols = std.heap.c_allocator.alloc(Column, c_cols.len) catch @panic("OOM");
-    var c_cols_slice: []const C.outbound_pg_column_t = undefined;
+    var c_cols_slice: []const C.outbound_pg_column_t = &.{};
     c_cols_slice.ptr = c_cols.ptr;
     c_cols_slice.len = c_cols.len;
 
-    var col: Column = undefined;
     for (c_cols_slice, 0..) |c_col, i| {
-        col.name.ptr = c_col.name.ptr;
-        col.name.len = c_col.name.len;
+        cols[i].name.ptr = c_col.name.ptr;
+        cols[i].name.len = c_col.name.len;
         cols[i].type = @enumFromInt(c_col.data_type);
-        cols[i].name = std.heap.c_allocator.dupe(u8, col.name) catch @panic("OOM");
     }
 
     return cols;
@@ -153,7 +145,7 @@ fn fromPostgresqlCols(c_cols: C.outbound_pg_list_column_t) []const Column {
 
 fn fromPostgresqlRows(c_rows: C.outbound_pg_list_row_t) []const []const Value {
     var rows = std.heap.c_allocator.alloc([]const Value, c_rows.len) catch @panic("OOM");
-    var c_rows_slice: []const C.outbound_pg_row_t = undefined;
+    var c_rows_slice: []const C.outbound_pg_row_t = &.{};
     c_rows_slice.ptr = c_rows.ptr;
     c_rows_slice.len = c_rows.len;
 
@@ -166,7 +158,7 @@ fn fromPostgresqlRows(c_rows: C.outbound_pg_list_row_t) []const []const Value {
 
 fn fromPostgresqlRow(c_row: C.outbound_pg_row_t) []const Value {
     var row = std.heap.c_allocator.alloc(Value, c_row.len) catch @panic("OOM");
-    var c_row_slice: []const C.outbound_pg_db_value_t = undefined;
+    var c_row_slice: []const C.outbound_pg_db_value_t = &.{};
     c_row_slice.ptr = c_row.ptr;
     c_row_slice.len = c_row.len;
 
@@ -191,16 +183,16 @@ fn fromPostgresqlValue(c_value: C.outbound_pg_db_value_t) Value {
         .float32 => .{ .float32 = c_value.val.floating32 },
         .float64 => .{ .float64 = c_value.val.floating64 },
         .string => blk: {
-            var string: []const u8 = undefined;
-            string.ptr = @ptrCast(c_value.val.str.ptr);
+            var string: []const u8 = &.{};
+            string.ptr = c_value.val.str.ptr;
             string.len = c_value.val.str.len;
-            break :blk .{ .string = std.heap.c_allocator.dupe(u8, string) catch @panic("OOM") };
+            break :blk .{ .string = string };
         },
         .binary => blk: {
-            var binary: []const u8 = undefined;
+            var binary: []const u8 = &.{};
             binary.ptr = c_value.val.binary.ptr;
             binary.len = c_value.val.binary.len;
-            break :blk .{ .binary = std.heap.c_allocator.dupe(u8, binary) catch @panic("OOM") };
+            break :blk .{ .binary = binary };
         },
         .null => .null,
     };

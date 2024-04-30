@@ -26,7 +26,7 @@ pub const Database = struct {
 
     /// Execute command.
     pub fn execute(self: Database, command: []const u8, args: []const Value) ?[]Value {
-        var c_result: C.outbound_redis_list_redis_result_t = undefined;
+        var c_result = C.outbound_redis_list_redis_result_t{};
         var c_address = toRedisString(self.address);
         var c_command = toRedisString(command);
         var c_args = toRedisArgs(args);
@@ -53,7 +53,7 @@ pub const Database = struct {
 
     /// Retrieve value by key.
     pub fn get(self: Database, key: []const u8) ?[]const u8 {
-        var c_payload: C.outbound_redis_payload_t = undefined;
+        var c_payload = C.outbound_redis_payload_t{};
         var c_address = toRedisString(self.address);
         var c_key = toRedisString(key);
 
@@ -62,7 +62,7 @@ pub const Database = struct {
             return null;
         }
 
-        var payload: []const u8 = undefined;
+        var payload: []const u8 = &.{};
         payload.ptr = c_payload.ptr;
         payload.len = c_payload.len;
         return payload;
@@ -125,7 +125,7 @@ pub const Database = struct {
 
     /// Retrieve values of key set.
     pub fn smembers(self: Database, key: []const u8) ?[]const []const u8 {
-        var c_payload: C.outbound_redis_list_string_t = undefined;
+        var c_payload = C.outbound_redis_list_string_t{};
         var c_address = toRedisString(self.address);
         var c_key = toRedisString(key);
 
@@ -155,14 +155,14 @@ pub const Database = struct {
 
 /// Exported to be called from auto-generated C bindings for Spin's inbound Redis API.
 pub export fn spin_redis_handle_redis_message(c_payload: *C.spin_redis_payload_t) C.spin_redis_error_t {
-    var payload: []const u8 = undefined;
+    var payload: []const u8 = &.{};
     payload.ptr = c_payload.ptr;
     payload.len = c_payload.len;
     return @intFromBool(HANDLER(payload));
 }
 
 fn toRedisString(string: []const u8) C.outbound_redis_string_t {
-    return .{ .ptr = @constCast(@ptrCast(string.ptr)), .len = string.len };
+    return .{ .ptr = @constCast(string.ptr), .len = string.len };
 }
 
 fn toRedisStrings(strings: []const []const u8) C.outbound_redis_list_string_t {
@@ -180,22 +180,20 @@ fn toRedisStrings(strings: []const []const u8) C.outbound_redis_list_string_t {
 
 fn fromRedisStrings(c_strings: *C.outbound_redis_list_string_t) []const []const u8 {
     var strings = std.heap.c_allocator.alloc([]const u8, c_strings.len) catch @panic("OOM");
-    var c_strings_slice: []const C.sqlite_string_t = undefined;
+    var c_strings_slice: []const C.sqlite_string_t = &.{};
     c_strings_slice.ptr = c_strings.ptr;
     c_strings_slice.len = c_strings.len;
 
-    var string: []const u8 = undefined;
     for (c_strings_slice, 0..) |c_string, i| {
-        string.ptr = c_string.ptr;
-        string.len = c_string.len;
-        strings[i] = std.heap.c_allocator.dupe(u8, string) catch @panic("OOM");
+        strings[i].ptr = c_string.ptr;
+        strings[i].len = c_string.len;
     }
 
     return strings;
 }
 
 fn toRedisArg(arg: Value) C.outbound_redis_redis_parameter_t {
-    var c_arg: C.outbound_redis_redis_parameter_t = undefined;
+    var c_arg = C.outbound_redis_redis_parameter_t{};
     c_arg.tag = @intFromEnum(arg) - 2;
 
     switch (arg) {
@@ -224,24 +222,24 @@ fn fromRedisValue(c_value: C.outbound_redis_redis_result_t) Value {
     return switch (@as(std.meta.Tag(Value), @enumFromInt(c_value.tag))) {
         .null => .null,
         .status => blk: {
-            var status: []const u8 = undefined;
-            status.ptr = @ptrCast(c_value.val.status.ptr);
+            var status: []const u8 = &.{};
+            status.ptr = c_value.val.status.ptr;
             status.len = c_value.val.status.len;
-            break :blk .{ .status = std.heap.c_allocator.dupe(u8, status) catch @panic("OOM") };
+            break :blk .{ .status = status };
         },
         .int64 => .{ .int64 = c_value.val.int64 },
         .binary => blk: {
-            var binary: []const u8 = undefined;
+            var binary: []const u8 = &.{};
             binary.ptr = c_value.val.binary.ptr;
             binary.len = c_value.val.binary.len;
-            break :blk .{ .binary = std.heap.c_allocator.dupe(u8, binary) catch @panic("OOM") };
+            break :blk .{ .binary = binary };
         },
     };
 }
 
 fn fromRedisValues(c_values: C.outbound_redis_list_redis_result_t) []const Value {
     var values = std.heap.c_allocator.alloc(Value, c_values.len) catch @panic("OOM");
-    var c_values_slice: []const C.sqlite_value_t = undefined;
+    var c_values_slice: []const C.sqlite_value_t = &.{};
     c_values_slice.ptr = c_values.ptr;
     c_values_slice.len = c_values.len;
 

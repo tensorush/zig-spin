@@ -2,12 +2,12 @@ const std = @import("std");
 const spin = @import("spin");
 
 fn handler(req: spin.http.Request) spin.http.Response {
-    var headers = spin.http.Headers{};
-    headers.append(std.heap.c_allocator, .{ .name = "Content-Type", .value = "text/plain" }) catch @panic("OOM");
-    headers.append(std.heap.c_allocator, .{ .name = "foo", .value = "bar" }) catch @panic("OOM");
+    var headers = spin.http.Headers.init(std.heap.c_allocator);
+    headers.append(.{ .name = "Content-Type", .value = "text/plain" }) catch @panic("OOM");
+    headers.append(.{ .name = "foo", .value = "bar" }) catch @panic("OOM");
 
-    var body = spin.http.Body{};
-    var body_buf_writer = std.io.bufferedWriter(body.writer(std.heap.c_allocator));
+    var body = spin.http.Body.init(std.heap.c_allocator);
+    var body_buf_writer = std.io.bufferedWriter(body.writer());
     const body_writer = body_buf_writer.writer();
 
     body_writer.print("== REQUEST ==\nURI: {s}\nMethod: {s}\nHeaders:\n", .{ req.uri, @tagName(req.method) }) catch @panic("OOM");

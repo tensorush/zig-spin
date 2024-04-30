@@ -9,11 +9,11 @@ const Pet = struct {
 };
 
 fn handler(_: spin.http.Request) spin.http.Response {
-    var headers = spin.http.Headers{};
-    headers.append(std.heap.c_allocator, .{ .name = "Content-Type", .value = "text/plain" }) catch @panic("OOM");
+    var headers = spin.http.Headers.init(std.heap.c_allocator);
+    headers.append(.{ .name = "Content-Type", .value = "text/plain" }) catch @panic("OOM");
 
-    var body = spin.http.Body{};
-    var body_buf_writer = std.io.bufferedWriter(body.writer(std.heap.c_allocator));
+    var body = spin.http.Body.init(std.heap.c_allocator);
+    var body_buf_writer = std.io.bufferedWriter(body.writer());
     const body_writer = body_buf_writer.writer();
 
     var db = spin.postgresql.Database{ .address = "host=localhost user=postgres dbname=spin_dev" };

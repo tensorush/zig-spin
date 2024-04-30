@@ -29,9 +29,9 @@ pub const RAW_COMPONENT_ROOT_HEADER = "spin-raw-component-route";
 pub var HANDLER: *const fn (Request) Response = undefined;
 
 /// HTTP request or response body.
-pub const Body = std.ArrayListUnmanaged(u8);
+pub const Body = std.ArrayList(u8);
 /// HTTP request or response headers.
-pub const Headers = std.ArrayListUnmanaged(Header);
+pub const Headers = std.ArrayList(Header);
 
 /// HTTP component's error set.
 /// Error value order is preserved for integer casting.
@@ -64,17 +64,17 @@ pub const Header = struct {
 
 /// HTTP request.
 pub const Request = struct {
-    headers: Headers = Headers{},
+    headers: Headers = Headers.init(std.heap.c_allocator),
+    body: Body = Body.init(std.heap.c_allocator),
     uri: []const u8 = &.{},
     method: Method = .GET,
-    body: Body = Body{},
 };
 
 /// HTTP response.
 pub const Response = struct {
+    headers: Headers = Headers.init(std.heap.c_allocator),
+    body: Body = Body.init(std.heap.c_allocator),
     status: std.http.Status = .ok,
-    headers: Headers = Headers{},
-    body: Body = Body{},
 };
 
 /// Exported to be called from auto-generated C bindings for Spin's inbound HTTP API.
@@ -86,10 +86,10 @@ pub export fn spin_http_handle_http_request(c_req: *C.spin_http_request_t, c_res
         req.body.items.len = c_req.body.val.len;
     }
 
-    req.headers.ensureTotalCapacity(std.heap.c_allocator, c_req.headers.len) catch @panic("OOM");
-    defer req.headers.deinit(std.heap.c_allocator);
+    req.headers.ensureTotalCapacity(c_req.headers.len) catch @panic("OOM");
+    defer req.headers.deinit();
 
-    var c_req_headers: []const C.spin_http_tuple2_string_string_t = undefined;
+    var c_req_headers: []const C.spin_http_tuple2_string_string_t = &.{};
     c_req_headers.ptr = c_req.headers.ptr;
     c_req_headers.len = c_req.headers.len;
 
@@ -112,25 +112,21 @@ pub export fn spin_http_handle_http_request(c_req: *C.spin_http_request_t, c_res
         var c_res_header_tuples = std.heap.c_allocator.alloc(C.spin_http_tuple2_string_string_t, res.headers.items.len) catch @panic("OOM");
 
         for (res.headers.items, 0..) |res_header, i| {
-            c_res_header_tuples[i] = C.spin_http_tuple2_string_string_t{
-                .f0 = C.spin_http_string_t{ .ptr = @constCast(@ptrCast(res_header.name.ptr)), .len = res_header.name.len },
-                .f1 = C.spin_http_string_t{ .ptr = @constCast(@ptrCast(res_header.value.ptr)), .len = res_header.value.len },
+            c_res_header_tuples[i] = .{
+                .f0 = .{ .ptr = @constCast(res_header.name.ptr), .len = res_header.name.len },
+                .f1 = .{ .ptr = @constCast(res_header.value.ptr), .len = res_header.value.len },
             };
         }
 
-        var c_res_headers: C.spin_http_headers_t = undefined;
-        c_res_headers.ptr = c_res_header_tuples.ptr;
-        c_res_headers.len = c_res_header_tuples.len;
-
-        c_res.headers = C.spin_http_option_headers_t{ .is_some = true, .val = c_res_headers };
+        c_res.headers = .{ .is_some = true, .val = .{ .ptr = c_res_header_tuples.ptr, .len = c_res_header_tuples.len } };
     } else {
-        c_res.headers = C.spin_http_option_headers_t{ .is_some = false, .val = undefined };
+        c_res.headers = .{ .is_some = false };
     }
 
     if (res.body.items.len > 0) {
-        c_res.body = C.spin_http_option_body_t{ .is_some = true, .val = C.spin_http_body_t{ .ptr = @constCast(res.body.items.ptr), .len = res.body.items.len } };
+        c_res.body = .{ .is_some = true, .val = .{ .ptr = @constCast(res.body.items.ptr), .len = res.body.items.len } };
     } else {
-        c_res.body = C.spin_http_option_body_t{ .is_some = false, .val = undefined };
+        c_res.body = .{ .is_some = false };
     }
 }
 
@@ -141,14 +137,16 @@ pub fn send(req: Request) Error!Response {
     var c_req = C.wasi_outbound_http_request_t{};
 
     c_req.method = @intFromEnum(req.method);
-    c_req.uri = C.wasi_outbound_http_uri_t{ .ptr = @constCast(@ptrCast(req.uri.ptr)), .len = req.uri.len };
+    c_req.uri = .{ .ptr = @constCast(req.uri.ptr), .len = req.uri.len };
 
     if (req.headers.items.len > 0) {
         var c_req_headers = std.heap.c_allocator.alloc(C.wasi_outbound_http_tuple2_string_string_t, req.headers.items.len) catch @panic("OOM");
 
         for (req.headers.items, 0..) |req_header, i| {
-            c_req_headers[i].f0 = C.wasi_outbound_http_string_t{ .ptr = @constCast(@ptrCast(req_header.name.ptr)), .len = req_header.name.len };
-            c_req_headers[i].f1 = C.wasi_outbound_http_string_t{ .ptr = @constCast(@ptrCast(req_header.value.ptr)), .len = req_header.value.len };
+            c_req_headers[i] = .{
+                .f0 = .{ .ptr = @constCast(req_header.name.ptr), .len = req_header.name.len },
+                .f1 = .{ .ptr = @constCast(req_header.value.ptr), .len = req_header.value.len },
+            };
         }
 
         c_req.headers.ptr = c_req_headers.ptr;
@@ -156,9 +154,9 @@ pub fn send(req: Request) Error!Response {
     }
 
     if (req.body.items.len > 0) {
-        c_res.body = C.wasi_outbound_http_option_body_t{ .is_some = true, .val = C.wasi_outbound_http_body_t{ .ptr = req.body.items.ptr, .len = req.body.items.len } };
+        c_res.body = .{ .is_some = true, .val = .{ .ptr = req.body.items.ptr, .len = req.body.items.len } };
     } else {
-        c_res.body = C.wasi_outbound_http_option_body_t{ .is_some = false, .val = undefined };
+        c_res.body = .{ .is_some = false };
     }
 
     const status_code = C.wasi_outbound_http_request(&c_req, &c_res);
@@ -174,10 +172,10 @@ pub fn send(req: Request) Error!Response {
     }
 
     if (c_res.headers.is_some) {
-        res.headers.ensureTotalCapacity(std.heap.c_allocator, c_res.headers.val.len + 1) catch @panic("OOM");
+        res.headers.ensureTotalCapacity(c_res.headers.val.len + 1) catch @panic("OOM");
         res.headers.appendAssumeCapacity(.{ .name = "Content-Type", .value = "text/plain" });
 
-        var c_res_headers: []const C.wasi_outbound_http_tuple2_string_string_t = undefined;
+        var c_res_headers: []const C.wasi_outbound_http_tuple2_string_string_t = &.{};
         c_res_headers.ptr = c_res.headers.val.ptr;
         c_res_headers.len = c_res.headers.val.len;
 

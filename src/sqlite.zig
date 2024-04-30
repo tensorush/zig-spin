@@ -39,11 +39,10 @@ pub const Database = struct {
 
     /// Open database connection.
     pub fn open(name: []const u8) Error!Database {
-        var c_conn: C.sqlite_expected_connection_error_t = undefined;
-
+        var c_conn = C.sqlite_expected_connection_error_t{};
         var c_name = toSqliteString(name);
-        C.sqlite_open(&c_name, &c_conn);
 
+        C.sqlite_open(&c_name, &c_conn);
         if (c_conn.is_err) {
             return std.meta.tags(Error)[c_conn.val.err.tag];
         }
@@ -58,14 +57,11 @@ pub const Database = struct {
 
     /// Execute query and return data with user-owned data rows and columns.
     pub fn execute(self: Database, statement: []const u8, args: []const Value) Error!Data {
-        var c_query_result: C.sqlite_expected_query_result_error_t = undefined;
-        defer C.sqlite_expected_query_result_error_free(&c_query_result);
-
+        var c_query_result = C.sqlite_expected_query_result_error_t{};
         var c_statement = toSqliteString(statement);
         var c_args = toSqliteArgs(args);
 
         C.sqlite_execute(self.handle, &c_statement, &c_args, &c_query_result);
-
         if (c_query_result.is_err) {
             return std.meta.tags(Error)[c_query_result.val.err.tag];
         }
@@ -78,7 +74,7 @@ pub const Database = struct {
 };
 
 fn toSqliteString(string: []const u8) C.sqlite_string_t {
-    return .{ .ptr = @constCast(@ptrCast(string.ptr)), .len = string.len };
+    return .{ .ptr = @constCast(string.ptr), .len = string.len };
 }
 
 fn toSqliteArgs(args: []const Value) C.sqlite_list_value_t {
@@ -95,7 +91,7 @@ fn toSqliteArgs(args: []const Value) C.sqlite_list_value_t {
 }
 
 fn toSqliteArg(arg: Value) C.sqlite_value_t {
-    var c_arg: C.sqlite_value_t = undefined;
+    var c_arg = C.sqlite_value_t{};
     c_arg.tag = @intFromEnum(arg);
 
     switch (arg) {
@@ -111,15 +107,13 @@ fn toSqliteArg(arg: Value) C.sqlite_value_t {
 
 fn fromSqliteCols(c_cols: C.sqlite_list_string_t) []const []const u8 {
     var cols = std.heap.c_allocator.alloc([]const u8, c_cols.len) catch @panic("OOM");
-    var c_cols_slice: []const C.sqlite_string_t = undefined;
+    var c_cols_slice: []const C.sqlite_string_t = &.{};
     c_cols_slice.ptr = c_cols.ptr;
     c_cols_slice.len = c_cols.len;
 
-    var col: []const u8 = undefined;
     for (c_cols_slice, 0..) |c_col, i| {
-        col.ptr = c_col.ptr;
-        col.len = c_col.len;
-        cols[i] = std.heap.c_allocator.dupe(u8, col) catch @panic("OOM");
+        cols[i].ptr = c_col.ptr;
+        cols[i].len = c_col.len;
     }
 
     return cols;
@@ -127,7 +121,7 @@ fn fromSqliteCols(c_cols: C.sqlite_list_string_t) []const []const u8 {
 
 fn fromSqliteRows(c_rows: C.sqlite_list_row_result_t) []const []const Value {
     var rows = std.heap.c_allocator.alloc([]const Value, c_rows.len) catch @panic("OOM");
-    var c_rows_slice: []const C.sqlite_row_result_t = undefined;
+    var c_rows_slice: []const C.sqlite_row_result_t = &.{};
     c_rows_slice.ptr = c_rows.ptr;
     c_rows_slice.len = c_rows.len;
 
@@ -140,7 +134,7 @@ fn fromSqliteRows(c_rows: C.sqlite_list_row_result_t) []const []const Value {
 
 fn fromSqliteRow(c_row: C.sqlite_list_value_t) []const Value {
     var row = std.heap.c_allocator.alloc(Value, c_row.len) catch @panic("OOM");
-    var c_row_slice: []const C.sqlite_value_t = undefined;
+    var c_row_slice: []const C.sqlite_value_t = &.{};
     c_row_slice.ptr = c_row.ptr;
     c_row_slice.len = c_row.len;
 
@@ -156,16 +150,16 @@ fn fromSqliteValue(c_value: C.sqlite_value_t) Value {
         .int => .{ .int = c_value.val.integer },
         .real => .{ .real = c_value.val.real },
         .text => blk: {
-            var text: []const u8 = undefined;
-            text.ptr = @ptrCast(c_value.val.text.ptr);
+            var text: []const u8 = &.{};
+            text.ptr = c_value.val.text.ptr;
             text.len = c_value.val.text.len;
-            break :blk .{ .text = std.heap.c_allocator.dupe(u8, text) catch @panic("OOM") };
+            break :blk .{ .text = text };
         },
         .blob => blk: {
-            var blob: []const u8 = undefined;
+            var blob: []const u8 = &.{};
             blob.ptr = c_value.val.blob.ptr;
             blob.len = c_value.val.blob.len;
-            break :blk .{ .blob = std.heap.c_allocator.dupe(u8, blob) catch @panic("OOM") };
+            break :blk .{ .blob = blob };
         },
         .null => .null,
     };

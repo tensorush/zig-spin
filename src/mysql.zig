@@ -55,15 +55,12 @@ pub const Database = struct {
 
     /// Execute query that doesn't return data, like INSERT or UPDATE.
     pub fn execute(self: Database, statement: []const u8, args: []const Value) Error!void {
-        var c_result: C.outbound_mysql_expected_unit_mysql_error_t = undefined;
-        defer C.outbound_mysql_expected_unit_mysql_error_free(&c_result);
-
+        var c_result = C.outbound_mysql_expected_unit_mysql_error_t{};
         var c_address = toMysqlString(self.address);
         var c_statement = toMysqlString(statement);
         var c_args = toMysqlArgs(args);
 
         C.outbound_mysql_execute(&c_address, &c_statement, &c_args, &c_result);
-
         if (c_result.is_err) {
             return std.meta.tags(Error)[c_result.val.err.tag];
         }
@@ -71,15 +68,12 @@ pub const Database = struct {
 
     /// Execute query and return data with user-owned data rows and columns.
     pub fn query(self: Database, statement: []const u8, args: []const Value) Error!QueryResult {
-        var c_query_result: C.outbound_mysql_expected_row_set_mysql_error_t = undefined;
-        defer C.outbound_mysql_expected_row_set_mysql_error_free(&c_query_result);
-
+        var c_query_result = C.outbound_mysql_expected_row_set_mysql_error_t{};
         var c_address = toMysqlString(self.address);
         var c_statement = toMysqlString(statement);
         var c_args = toMysqlArgs(args);
 
         C.outbound_mysql_query(&c_address, &c_statement, &c_args, &c_query_result);
-
         if (c_query_result.is_err) {
             return std.meta.tags(Error)[c_query_result.val.err.tag];
         }
@@ -92,7 +86,7 @@ pub const Database = struct {
 };
 
 fn toMysqlString(string: []const u8) C.outbound_mysql_string_t {
-    return .{ .ptr = @constCast(@ptrCast(string.ptr)), .len = string.len };
+    return .{ .ptr = @constCast(string.ptr), .len = string.len };
 }
 
 fn toMysqlArgs(args: []const Value) C.outbound_mysql_list_parameter_value_t {
@@ -109,7 +103,7 @@ fn toMysqlArgs(args: []const Value) C.outbound_mysql_list_parameter_value_t {
 }
 
 fn toMysqlArg(arg: Value) C.outbound_mysql_parameter_value_t {
-    var c_arg: C.outbound_mysql_parameter_value_t = undefined;
+    var c_arg = C.outbound_mysql_parameter_value_t{};
     c_arg.tag = @intFromEnum(arg);
 
     switch (arg) {
@@ -138,12 +132,10 @@ fn fromMysqlCols(c_cols: C.outbound_mysql_list_column_t) []const Column {
     c_cols_slice.ptr = c_cols.ptr;
     c_cols_slice.len = c_cols.len;
 
-    var col: Column = undefined;
     for (c_cols_slice, 0..) |c_col, i| {
-        col.name.ptr = c_col.name.ptr;
-        col.name.len = c_col.name.len;
+        cols[i].name.ptr = c_col.name.ptr;
+        cols[i].name.len = c_col.name.len;
         cols[i].type = @enumFromInt(c_col.data_type);
-        cols[i].name = std.heap.c_allocator.dupe(u8, col.name) catch @panic("OOM");
     }
 
     return cols;
@@ -189,16 +181,16 @@ fn fromMysqlValue(c_value: C.outbound_mysql_db_value_t) Value {
         .float32 => .{ .float32 = c_value.val.floating32 },
         .float64 => .{ .float64 = c_value.val.floating64 },
         .string => blk: {
-            var string: []const u8 = undefined;
-            string.ptr = @ptrCast(c_value.val.str.ptr);
+            var string: []const u8 = &.{};
+            string.ptr = c_value.val.str.ptr;
             string.len = c_value.val.str.len;
-            break :blk .{ .string = std.heap.c_allocator.dupe(u8, string) catch @panic("OOM") };
+            break :blk .{ .string = string };
         },
         .binary => blk: {
-            var binary: []const u8 = undefined;
+            var binary: []const u8 = &.{};
             binary.ptr = c_value.val.binary.ptr;
             binary.len = c_value.val.binary.len;
-            break :blk .{ .binary = std.heap.c_allocator.dupe(u8, binary) catch @panic("OOM") };
+            break :blk .{ .binary = binary };
         },
         .null => .null,
     };
