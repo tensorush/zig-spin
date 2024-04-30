@@ -57,10 +57,7 @@ pub const Method = enum {
 };
 
 /// HTTP request or response header.
-pub const Header = struct {
-    value: []const u8 = &.{},
-    name: []const u8 = &.{},
-};
+pub const Header = std.http.Header;
 
 /// HTTP request.
 pub const Request = struct {
@@ -93,7 +90,10 @@ pub export fn spin_http_handle_http_request(c_req: *C.spin_http_request_t, c_res
     c_req_headers.ptr = c_req.headers.ptr;
     c_req_headers.len = c_req.headers.len;
 
-    var header = Header{};
+    var header = Header{
+        .name = &.{},
+        .value = &.{},
+    };
     for (c_req_headers) |c_req_header| {
         header.name.ptr = c_req_header.f0.ptr;
         header.name.len = c_req_header.f0.len;
@@ -179,7 +179,10 @@ pub fn send(req: Request) Error!Response {
         c_res_headers.ptr = c_res.headers.val.ptr;
         c_res_headers.len = c_res.headers.val.len;
 
-        var header = Header{};
+        var header = Header{
+            .name = &.{},
+            .value = &.{},
+        };
         for (c_res_headers) |c_res_header| {
             header.name.ptr = c_res_header.f0.ptr;
             header.name.len = c_res_header.f0.len;
