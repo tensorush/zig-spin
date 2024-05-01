@@ -30,6 +30,8 @@ pub var HANDLER: *const fn (Request) Response = undefined;
 
 /// HTTP request or response body.
 pub const Body = std.ArrayList(u8);
+/// HTTP request or response header.
+pub const Header = std.http.Header;
 /// HTTP request or response headers.
 pub const Headers = std.ArrayList(Header);
 
@@ -55,9 +57,6 @@ pub const Method = enum {
     HEAD,
     OPTIONS,
 };
-
-/// HTTP request or response header.
-pub const Header = std.http.Header;
 
 /// HTTP request.
 pub const Request = struct {
@@ -90,16 +89,12 @@ pub export fn spin_http_handle_http_request(c_req: *C.spin_http_request_t, c_res
     c_req_headers.ptr = c_req.headers.ptr;
     c_req_headers.len = c_req.headers.len;
 
-    var header = Header{
-        .name = &.{},
-        .value = &.{},
-    };
     for (c_req_headers) |c_req_header| {
+        var header = req.headers.addOneAssumeCapacity();
         header.name.ptr = c_req_header.f0.ptr;
         header.name.len = c_req_header.f0.len;
         header.value.ptr = c_req_header.f1.ptr;
         header.value.len = c_req_header.f1.len;
-        req.headers.appendAssumeCapacity(header);
         if (std.mem.eql(u8, FULL_URL_HEADER, header.name)) {
             req.uri = header.value;
         }
@@ -179,16 +174,12 @@ pub fn send(req: Request) Error!Response {
         c_res_headers.ptr = c_res.headers.val.ptr;
         c_res_headers.len = c_res.headers.val.len;
 
-        var header = Header{
-            .name = &.{},
-            .value = &.{},
-        };
         for (c_res_headers) |c_res_header| {
+            var header = res.headers.addOneAssumeCapacity();
             header.name.ptr = c_res_header.f0.ptr;
             header.name.len = c_res_header.f0.len;
             header.value.ptr = c_res_header.f1.ptr;
             header.value.len = c_res_header.f1.len;
-            res.headers.appendAssumeCapacity(header);
         }
     }
 

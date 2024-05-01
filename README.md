@@ -13,7 +13,7 @@
 >
 > - Make sure your executable's optimization mode is `ReleaseSmall` and target is `wasm32-wasi`.
 > - Make sure you use `std.heap.c_allocator` when allocating/freeing memory consumed/returned by this library.
-> - Currently, this library leaks memory to avoid some reallocations. Ideally, it would use native WIT Zig bindings that relied on `std.heap.wasm_allocator`.
+> - Currently, this library leaks memory to avoid some reallocations. Ideally, it would use WIT Zig bindings that relied on `std.heap.wasm_allocator`.
 >
 > See the [package test](test/) for a complete basic usage example.
 
