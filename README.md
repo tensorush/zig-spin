@@ -1,11 +1,11 @@
-# :lizard: :yo_yo: zig spin
+# zpin
 
 [![CI][ci-shd]][ci-url]
 [![CD][cd-shd]][cd-url]
 [![DC][dc-shd]][dc-url]
 [![LC][lc-shd]][lc-url]
 
-## Zig SDK for the [Spin serverless application framework](https://github.com/fermyon/spin) created by the [Fermyon team](https://www.fermyon.com/).
+## Zig [Spin](https://github.com/fermyon/spin) SDK.
 
 ### :rocket: Usage
 
@@ -29,7 +29,7 @@
         .version = "<version_of_your_package>",
         .dependencies = .{
             .spin = .{
-                .url = "https://github.com/tensorush/zig-spin/archive/<git_tag_or_commit_hash>.tar.gz",
+                .url = "https://github.com/tensorush/zpin/archive/<git_tag_or_commit_hash>.tar.gz",
                 .hash = "<package_hash>",
             },
         },
@@ -91,11 +91,11 @@
 
 <!-- MARKDOWN LINKS -->
 
-[ci-shd]: https://img.shields.io/github/actions/workflow/status/tensorush/zig-spin/ci.yaml?branch=main&style=for-the-badge&logo=github&label=CI&labelColor=black
-[ci-url]: https://github.com/tensorush/zig-spin/blob/main/.github/workflows/ci.yaml
-[cd-shd]: https://img.shields.io/github/actions/workflow/status/tensorush/zig-spin/cd.yaml?branch=main&style=for-the-badge&logo=github&label=CD&labelColor=black
-[cd-url]: https://github.com/tensorush/zig-spin/blob/main/.github/workflows/cd.yaml
+[ci-shd]: https://img.shields.io/github/actions/workflow/status/tensorush/zpin/ci.yaml?branch=main&style=for-the-badge&logo=github&label=CI&labelColor=black
+[ci-url]: https://github.com/tensorush/zpin/blob/main/.github/workflows/ci.yaml
+[cd-shd]: https://img.shields.io/github/actions/workflow/status/tensorush/zpin/cd.yaml?branch=main&style=for-the-badge&logo=github&label=CD&labelColor=black
+[cd-url]: https://github.com/tensorush/zpin/blob/main/.github/workflows/cd.yaml
 [dc-shd]: https://img.shields.io/badge/click-F6A516?style=for-the-badge&logo=zig&logoColor=F6A516&label=doc&labelColor=black
-[dc-url]: https://tensorush.github.io/zig-spin
-[lc-shd]: https://img.shields.io/github/license/tensorush/zig-spin.svg?style=for-the-badge&labelColor=black
-[lc-url]: https://github.com/tensorush/zig-spin/blob/main/LICENSE.md
+[dc-url]: https://tensorush.github.io/zpin
+[lc-shd]: https://img.shields.io/github/license/tensorush/zpin.svg?style=for-the-badge&labelColor=black
+[lc-url]: https://github.com/tensorush/zpin/blob/main/LICENSE.md

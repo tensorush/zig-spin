@@ -13,8 +13,8 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .root_source_file = root_source_file,
     });
-    spin_mod.addCSourceFiles(.{ .root = b.path(INC_DIR), .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
-    spin_mod.addIncludePath(b.path(INC_DIR));
+    spin_mod.addCSourceFiles(.{ .root = b.path(INCLUDE_DIR), .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
+    spin_mod.addIncludePath(b.path(INCLUDE_DIR));
 
     // WIT C bindings
     const wit_step = b.step("wit", "Generate WIT C bindings");
@@ -23,7 +23,7 @@ pub fn build(b: *std.Build) void {
         const wit_run = b.addSystemCommand(&.{
             "wit-bindgen",                     "c",
             if (WIT_IS_IMPORT) "-i" else "-e", WIT_DIR ++ WIT_NAME ++ ".wit",
-            "--out-dir",                       INC_DIR,
+            "--out-dir",                       INCLUDE_DIR,
         });
 
         wit_step.dependOn(&wit_run.step);
@@ -39,8 +39,8 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .root_source_file = root_source_file,
     });
-    lib.addCSourceFiles(.{ .root = b.path(INC_DIR), .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
-    lib.addIncludePath(b.path(INC_DIR));
+    lib.addCSourceFiles(.{ .root = b.path(INCLUDE_DIR), .files = WIT_C_FILES, .flags = WIT_C_FLAGS });
+    lib.addIncludePath(b.path(INCLUDE_DIR));
     lib.linkLibC();
 
     const lib_install = b.addInstallArtifact(lib, .{});
@@ -62,36 +62,17 @@ pub fn build(b: *std.Build) void {
     // Example suite
     const examples_step = b.step("example", "Install example suite");
 
-    const are_examples_up = b.option(bool, "up", "Run example suite") orelse false;
+    inline for (EXAMPLE_NAMES) |EXAMPLE_NAME| {
+        const example = b.addExecutable(.{
+            .name = EXAMPLE_NAME,
+            .target = target,
+            .optimize = optimize,
+            .root_source_file = b.path(EXAMPLES_DIR ++ EXAMPLE_NAME ++ "/main.zig"),
+        });
+        example.root_module.addImport("spin", spin_mod);
 
-    if (are_examples_up) {
-        var port = [4]u8{ '9', '0', '0', '0' };
-        inline for (EXAMPLE_NAMES) |EXAMPLE_NAME| {
-            const example_run = blk: {
-                if (std.mem.eql(u8, EXAMPLE_NAME, "redis-in")) {
-                    break :blk b.addSystemCommand(&.{ "spin", "build", "--up" });
-                } else {
-                    defer port[3] += 1;
-                    break :blk b.addSystemCommand(&.{ "spin", "build", "--up", "--listen", "localhost:" ++ port });
-                }
-            };
-            example_run.setCwd(b.path(EXAMPLES_DIR ++ EXAMPLE_NAME));
-
-            examples_step.dependOn(&example_run.step);
-        }
-    } else {
-        inline for (EXAMPLE_NAMES) |EXAMPLE_NAME| {
-            const example = b.addExecutable(.{
-                .name = EXAMPLE_NAME,
-                .target = target,
-                .optimize = optimize,
-                .root_source_file = b.path(EXAMPLES_DIR ++ EXAMPLE_NAME ++ "/main.zig"),
-            });
-            example.root_module.addImport("spin", spin_mod);
-
-            const example_install = b.addInstallArtifact(example, .{});
-            examples_step.dependOn(&example_install.step);
-        }
+        const example_install = b.addInstallArtifact(example, .{});
+        examples_step.dependOn(&example_install.step);
     }
 
     b.default_step.dependOn(examples_step);
@@ -114,8 +95,8 @@ pub fn build(b: *std.Build) void {
 }
 
 const WIT_DIR = "wit/";
-const INC_DIR = "src/include/";
 const EXAMPLES_DIR = "examples/";
+const INCLUDE_DIR = "src/include/";
 
 const EXAMPLE_NAMES = &.{
     "http-out",
